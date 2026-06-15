@@ -1,0 +1,8 @@
+{
+  "name": "Ikonicity Airban Portfolio",
+  "description": "An immersive 3D website showcasing Airban Ikonicity’s creative software solutions and tech training where innovative digital ideas are baked.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

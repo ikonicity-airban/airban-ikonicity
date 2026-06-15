@@ -1,0 +1,158 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. GLOBAL SAFETY NET
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. HELPER FUNCTIONS
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && 
+             request.auth.token.email == 'ikonicityairban@gmail.com' && 
+             request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // 3. SCHEMA VALIDATORS
+    function isValidAvailability(data) {
+      return data.keys().hasAll(['status', 'message', 'updatedAt']) &&
+             data.keys().size() == 3 &&
+             data.status is string && 
+             (data.status == 'available' || data.status == 'busy' || data.status == 'away') &&
+             data.message is string && 
+             data.message.size() <= 200;
+    }
+
+    function isValidProject(data) {
+      return data.keys().hasAll(['title', 'slug', 'imageUrl', 'status', 'liveUrl', 'repoUrl', 'description', 'longDesc', 'role', 'year', 'stack', 'featured', 'isVisible', 'order']) &&
+             data.keys().size() == 14 &&
+             data.title is string && data.title.size() <= 120 &&
+             data.slug is string && data.slug.size() <= 120 &&
+             data.imageUrl is string && data.imageUrl.size() <= 1000 &&
+             data.status is string && data.status.size() <= 50 &&
+             data.liveUrl is string && data.liveUrl.size() <= 1000 &&
+             data.repoUrl is string && data.repoUrl.size() <= 1000 &&
+             data.description is string && data.description.size() <= 500 &&
+             data.longDesc is string && data.longDesc.size() <= 10000 &&
+             data.role is string && data.role.size() <= 100 &&
+             data.year is string && data.year.size() <= 10 &&
+             data.stack is list && data.stack.size() <= 20 &&
+             data.featured is bool &&
+             data.isVisible is bool &&
+             data.order is number;
+    }
+
+    // Validates basic schema for updates (partial keys)
+    function isValidProjectUpdate(data) {
+      return (!data.keys().contains('title') || (data.title is string && data.title.size() <= 120)) &&
+             (!data.keys().contains('slug') || (data.slug is string && data.slug.size() <= 120)) &&
+             (!data.keys().contains('imageUrl') || (data.imageUrl is string && data.imageUrl.size() <= 1000)) &&
+             (!data.keys().contains('status') || (data.status is string && data.status.size() <= 50)) &&
+             (!data.keys().contains('liveUrl') || (data.liveUrl is string && data.liveUrl.size() <= 1000)) &&
+             (!data.keys().contains('repoUrl') || (data.repoUrl is string && data.repoUrl.size() <= 1000)) &&
+             (!data.keys().contains('description') || (data.description is string && data.description.size() <= 500)) &&
+             (!data.keys().contains('longDesc') || (data.longDesc is string && data.longDesc.size() <= 10000)) &&
+             (!data.keys().contains('role') || (data.role is string && data.role.size() <= 100)) &&
+             (!data.keys().contains('year') || (data.year is string && data.year.size() <= 10)) &&
+             (!data.keys().contains('stack') || (data.stack is list && data.stack.size() <= 20)) &&
+             (!data.keys().contains('featured') || (data.featured is bool)) &&
+             (!data.keys().contains('isVisible') || (data.isVisible is bool)) &&
+             (!data.keys().contains('order') || (data.order is number));
+    }
+
+    function isValidTestimonial(data) {
+      return data.keys().hasAll(['quote', 'authorName', 'company', 'authorRole', 'avatarUrl', 'isVisible', 'order']) &&
+             data.keys().size() == 7 &&
+             data.quote is string && data.quote.size() <= 1000 &&
+             data.authorName is string && data.authorName.size() <= 120 &&
+             data.company is string && data.company.size() <= 120 &&
+             data.authorRole is string && data.authorRole.size() <= 120 &&
+             data.avatarUrl is string && data.avatarUrl.size() <= 1000 &&
+             data.isVisible is bool &&
+             data.order is number;
+    }
+
+    function isValidTestimonialUpdate(data) {
+      return (!data.keys().contains('quote') || (data.quote is string && data.quote.size() <= 1000)) &&
+             (!data.keys().contains('authorName') || (data.authorName is string && data.authorName.size() <= 120)) &&
+             (!data.keys().contains('company') || (data.company is string && data.company.size() <= 120)) &&
+             (!data.keys().contains('authorRole') || (data.authorRole is string && data.authorRole.size() <= 120)) &&
+             (!data.keys().contains('avatarUrl') || (data.avatarUrl is string && data.avatarUrl.size() <= 1000)) &&
+             (!data.keys().contains('isVisible') || (data.isVisible is bool)) &&
+             (!data.keys().contains('order') || (data.order is number));
+    }
+
+    function isValidMessage(data) {
+      return data.keys().hasAll(['name', 'email', 'subject', 'budget', 'message', 'status', 'createdAt']) &&
+             data.keys().size() == 7 &&
+             data.name is string && data.name.size() <= 100 &&
+             data.email is string && data.email.size() <= 100 &&
+             data.subject is string && data.subject.size() <= 200 &&
+             data.budget is string && data.budget.size() <= 50 &&
+             data.message is string && data.message.size() <= 5000 &&
+             data.status is string && (data.status == 'unread' || data.status == 'read' || data.status == 'replied' || data.status == 'archived');
+    }
+
+    function isValidPageView(data) {
+      return data.keys().hasAll(['path', 'referrer', 'device', 'createdAt']) &&
+             data.keys().size() == 4 &&
+             data.path is string && data.path.size() <= 100 &&
+             data.referrer is string && data.referrer.size() <= 200 &&
+             data.device is string && data.device.size() <= 100;
+    }
+
+    // 4. COLLECTION MATCH BLOCKS
+
+    // Availability
+    match /availability/{docId} {
+      allow read: if true;
+      allow create, delete: if isAdmin() && isValidAvailability(incoming());
+      allow update: if isAdmin() && isValidAvailability(incoming());
+    }
+
+    // Projects
+    match /projects/{projectId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidProject(incoming());
+      allow update: if isAdmin() && isValidProjectUpdate(incoming());
+      allow delete: if isAdmin();
+    }
+
+    // Testimonials
+    match /testimonials/{testimonialId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidTestimonial(incoming());
+      allow update: if isAdmin() && isValidTestimonialUpdate(incoming());
+      allow delete: if isAdmin();
+    }
+
+    // Messages
+    match /messages/{messageId} {
+      allow create: if isValidMessage(incoming());
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Analytics (PageViews)
+    match /analytics/{viewId} {
+      allow create: if isValidPageView(incoming());
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}

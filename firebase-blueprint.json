@@ -1,0 +1,203 @@
+{
+  "entities": {
+    "Availability": {
+      "title": "Availability",
+      "description": "Portfolios availability status indicator",
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "status",
+        "message",
+        "updatedAt"
+      ]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "Portfolio project item",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "imageUrl": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "liveUrl": {
+          "type": "string"
+        },
+        "repoUrl": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "longDesc": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        },
+        "year": {
+          "type": "string"
+        },
+        "stack": {
+          "type": "array"
+        },
+        "featured": {
+          "type": "boolean"
+        },
+        "isVisible": {
+          "type": "boolean"
+        },
+        "order": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "title",
+        "slug",
+        "imageUrl",
+        "featured",
+        "isVisible",
+        "order"
+      ]
+    },
+    "Testimonial": {
+      "title": "Testimonial",
+      "description": "Client testimonial cards",
+      "type": "object",
+      "properties": {
+        "quote": {
+          "type": "string"
+        },
+        "authorName": {
+          "type": "string"
+        },
+        "company": {
+          "type": "string"
+        },
+        "authorRole": {
+          "type": "string"
+        },
+        "avatarUrl": {
+          "type": "string"
+        },
+        "isVisible": {
+          "type": "boolean"
+        },
+        "order": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "quote",
+        "authorName",
+        "company",
+        "isVisible",
+        "order"
+      ]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Contact form submissions",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "budget": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "name",
+        "email",
+        "subject",
+        "message",
+        "status",
+        "createdAt"
+      ]
+    },
+    "PageView": {
+      "title": "PageView",
+      "description": "Web analytics page views tracking",
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "referrer": {
+          "type": "string"
+        },
+        "device": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "path",
+        "referrer",
+        "device",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "availability": {
+      "schema": "Availability",
+      "description": "Global status configuration"
+    },
+    "projects": {
+      "schema": "Project",
+      "description": "List of portfolio projects"
+    },
+    "testimonials": {
+      "schema": "Testimonial",
+      "description": "Client feedback testimonials list"
+    },
+    "messages": {
+      "schema": "Message",
+      "description": "User message transmissions"
+    },
+    "analytics": {
+      "schema": "PageView",
+      "description": "Traffic statistics database"
+    }
+  }
+}

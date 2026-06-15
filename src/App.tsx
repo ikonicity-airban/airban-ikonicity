@@ -1,0 +1,1130 @@
+import { useEffect, useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { 
+  Terminal, 
+  Laptop, 
+  Globe, 
+  GraduationCap, 
+  Code2, 
+  Sliders, 
+  Video, 
+  Info, 
+  Settings, 
+  Shield, 
+  Layers, 
+  Wifi, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  Activity, 
+  ExternalLink, 
+  Database, 
+  Award, 
+  Send,
+  ChevronRight,
+  RefreshCw,
+  Wallet,
+  Menu,
+  X,
+  Volume2,
+  VolumeX,
+  MessageCircle,
+  Download,
+  Home,
+  Cpu
+} from 'lucide-react';
+import Logo from './components/Logo';
+import ScrollProgressHUD from './components/ScrollProgressHUD';
+import MobileFastScroller from './components/MobileFastScroller';
+import SectionDivider from './components/SectionDivider';
+import { portfolioData } from './data';
+import { handleDownloadCV, playClickSound, normalizeVideoUrl } from './utils';
+import HeroSection from './components/HeroSection';
+import AboutSection from './components/AboutSection';
+import SkillsSection from './components/SkillsSection';
+import ProjectsSection from './components/ProjectsSection';
+import WorkExperienceSection from './components/WorkExperienceSection';
+import ServicesSection from './components/ServicesSection';
+import CertificationsSection from './components/CertificationsSection';
+import TestimonialsSection from './components/TestimonialsSection';
+import ContactSection from './components/ContactSection';
+import FooterSection from './components/FooterSection';
+import AdminSection from './components/AdminSection';
+import CVModal from './components/CVModal';
+import { db, seedDatabaseIfEmpty } from './firebase';
+import { collection, query, orderBy, onSnapshot, doc } from 'firebase/firestore';
+
+export default function App() {
+  const [booting, setBooting] = useState(true);
+  const [bootStep, setBootStep] = useState(0);
+  const [bootLogs, setBootLogs] = useState<string[]>([]);
+  const [uptime, setUptime] = useState({ d: 0, h: 0, m: 0, s: 0, ms: 0 });
+  const [ping, setPing] = useState(24);
+  const [localDateTime, setLocalDateTime] = useState('');
+  const [videoUrl, setVideoUrl] = useState(() => {
+    return localStorage.getItem('codeoven_video_url') || '';
+  });
+  const [heroBgVideoUrl, setHeroBgVideoUrl] = useState(() => {
+    const saved = localStorage.getItem('codeoven_hero_bg_video_url');
+    return saved ? normalizeVideoUrl(saved) : 'https://res.cloudinary.com/ikonicity-airban/video/upload/090b0b2e549c157f607c0cec73221888.mp4';
+  });
+  
+  const [showConfig, setShowConfig] = useState(false);
+  const [showCVModal, setShowCVModal] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [inputUrl, setInputUrl] = useState('');
+  const [inputBgUrl, setInputBgUrl] = useState('');
+  const [activePreset, setActivePreset] = useState<'matrix' | 'neon' | 'code' | 'custom'>('matrix');
+  const [accentColor, setAccentColor] = useState<'green' | 'cyan'>('green'); // Following strict Two-Accent rule
+  const [activeThemeProfile, setActiveThemeProfile] = useState<string>('matrix-crypt');
+  const [themeSwitchingName, setThemeSwitchingName] = useState<string | null>(null);
+  // Sub-space transmission logger
+  const [transmissionLogs, setTransmissionLogs] = useState<string[]>(['[SYS]: PORTAL READY FOR NEURAL TRANSMISSION...']);
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [transmitting, setTransmitting] = useState(false);
+  const [transmitSuccess, setTransmitSuccess] = useState(false);
+
+  // Live Firestore database states
+  const [dbProjects, setDbProjects] = useState<any[]>([]);
+  const [dbTestimonials, setDbTestimonials] = useState<any[]>([]);
+  const [availability, setAvailability] = useState<{ status: string; message: string }>({
+    status: 'available',
+    message: 'Available for work'
+  });
+  const [showAdmin, setShowAdmin] = useState(false);
+
+  // MetaMask / Web3 Wallet integration
+  const [walletAddress, setWalletAddress] = useState<string>(() => {
+    return localStorage.getItem('codeoven_wallet_address') || '';
+  });
+  const [connectingWallet, setConnectingWallet] = useState(false);
+  const [walletError, setWalletError] = useState('');
+
+  // Global sound toggle control for background video audio
+  const [isMuted, setIsMuted] = useState<boolean>(() => {
+    const saved = localStorage.getItem('bg_video_muted');
+    return saved !== null ? saved === 'true' : true;
+  });
+
+  const toggleMute = () => {
+    const nextValue = !isMuted;
+    setIsMuted(nextValue);
+    localStorage.setItem('bg_video_muted', String(nextValue));
+  };
+
+  const [showWhatsApp, setShowWhatsApp] = useState(false);
+  const whatsappTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Show WhatsApp button while scrolling is happening
+      setShowWhatsApp(true);
+
+      // Cancel any previous timeout
+      if (whatsappTimeoutRef.current) {
+        clearTimeout(whatsappTimeoutRef.current);
+      }
+
+      // Hide WhatsApp button after exactly 2 seconds of scroll inactivity (denounce/throttle)
+      whatsappTimeoutRef.current = setTimeout(() => {
+        setShowWhatsApp(false);
+      }, 2000);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (whatsappTimeoutRef.current) {
+        clearTimeout(whatsappTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // References
+  const terminalLogsEndRef = useRef<HTMLDivElement>(null);
+
+  // Simulated system diagnostics log messages for the loader Sequence
+  const sysLogs = [
+    ">> COCKPIT INTERFACE BOOT PROTOCOL v4.1.002 INITIALIZED",
+    ">> AUTH SECTOR: ikonicity-airban CONFIRMED ENUGU PORT",
+    ">> LINKING LATENCY ENGINE: PING 24ms TO LOCAL CHANNELS",
+    ">> COMPILING SOLIDITY CORE & SOL PROTOCOLS...",
+    ">> COMPILING RUST CRATE AXUM BINDINGS...",
+    ">> BINDING TYPESCRIPT TYPES AND MEMORY POOLS...",
+    ">> RESOLVING PLUGINS [BUN / NODE / DENO] DETECTED",
+    ">> INJECTING NEON SYSTEM ACCENTS // COAX_2210 ENABLED",
+    ">> RESOLVING GEOLOCATION MAP: 6.4281° N, 7.4951° E",
+    ">> LOADING GRAPHIC INTERFACE FLIGHT PATHS...",
+    ">> PREPARING PRIMARY COCKPIT VIEW... SYSTEMS GREEN 🟢"
+  ];
+
+  // Boot Sequence effect
+  useEffect(() => {
+    if (bootStep < sysLogs.length) {
+      const interval = setTimeout(() => {
+        setBootLogs(prev => [...prev, sysLogs[bootStep]]);
+        setBootStep(prev => prev + 1);
+      }, 220);
+      return () => clearTimeout(interval);
+    } else {
+      const finishBoot = setTimeout(() => {
+        setBooting(false);
+      }, 400);
+      return () => clearTimeout(finishBoot);
+    }
+  }, [bootStep]);
+
+  // Uptime dynamic calculator (Inception Date cached in Local Storage to prevent drift and persist status across browser refreshes)
+  useEffect(() => {
+    let savedInception = localStorage.getItem('codeoven_uptime_inception');
+    if (!savedInception) {
+      savedInception = '2021-01-01T00:00:00Z';
+      localStorage.setItem('codeoven_uptime_inception', savedInception);
+    }
+    const epoch = new Date(savedInception).getTime() || new Date('2021-01-01T00:00:00Z').getTime();
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const diff = now - epoch;
+
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const s = Math.floor((diff % (1000 * 60)) / 1000);
+      const ms = Math.floor((diff % 1000));
+
+      setUptime({ d, h, m, s, ms });
+    }, 45); // highly rapid updates to display milliseconds pacing
+    return () => clearInterval(interval);
+  }, []);
+
+  // Local Date and Time ticker
+  useEffect(() => {
+    const updateDateTime = () => {
+      const now = new Date();
+      
+      const pad = (n: number) => String(n).padStart(2, '0');
+      
+      const year = now.getFullYear();
+      const month = pad(now.getMonth() + 1);
+      const day = pad(now.getDate());
+      
+      const hours = pad(now.getHours());
+      const minutes = pad(now.getMinutes());
+      const seconds = pad(now.getSeconds());
+      
+      // Get three-letter short timezone or UTC offset
+      let tz = '';
+      try {
+        tz = now.toLocaleDateString('en-US', { timeZoneName: 'short' }).split(', ')[1] || '';
+      } catch (e) {
+        // Fallback
+      }
+      
+      const formatted = `${year}-${month}-${day} @ ${hours}:${minutes}:${seconds}${tz ? ` (${tz})` : ''}`;
+      setLocalDateTime(formatted);
+    };
+    
+    updateDateTime();
+    const interval = setInterval(updateDateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Real-time Database Synchronization Setup
+  useEffect(() => {
+    // Seed initial records if empty, then listen for state updates
+    seedDatabaseIfEmpty().then(() => {
+      const projectsQuery = query(collection(db, 'projects'), orderBy('order', 'asc'));
+      const unsubProjects = onSnapshot(projectsQuery, (snapshot) => {
+        const fetched: any[] = [];
+        snapshot.forEach((docSnap) => {
+          fetched.push({ id: docSnap.id, ...docSnap.data() });
+        });
+        setDbProjects(fetched);
+      }, (err) => {
+        console.error('Realtime projects subscription failed:', err);
+      });
+
+      const testimonialsQuery = query(collection(db, 'testimonials'), orderBy('order', 'asc'));
+      const unsubTestimonials = onSnapshot(testimonialsQuery, (snapshot) => {
+        const fetched: any[] = [];
+        snapshot.forEach((docSnap) => {
+          fetched.push({ id: docSnap.id, ...docSnap.data() });
+        });
+        setDbTestimonials(fetched);
+      }, (err) => {
+        console.error('Realtime testimonials subscription failed:', err);
+      });
+
+      const unsubAvailability = onSnapshot(doc(db, 'availability', 'global'), (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setAvailability({
+            status: data.status || 'available',
+            message: data.message || 'Available for work'
+          });
+        }
+      }, (err) => {
+        console.error('Realtime availability subscription failed:', err);
+      });
+
+      return () => {
+        unsubProjects();
+        unsubTestimonials();
+        unsubAvailability();
+      };
+    }).catch(err => {
+      console.error('Initial database seeding / initialization failed:', err);
+    });
+  }, []);
+
+  // Ping jitter sim
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPing(prev => Math.max(14, Math.min(48, prev + (Math.random() > 0.5 ? 2 : -2))));
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
+
+
+
+  const handleSaveVideoUrl = (e: React.FormEvent) => {
+    e.preventDefault();
+    localStorage.setItem('codeoven_video_url', inputUrl);
+    setVideoUrl(inputUrl);
+    setShowConfig(false);
+  };
+
+  const handleClearVideo = () => {
+    localStorage.removeItem('codeoven_video_url');
+    setVideoUrl('');
+    setInputUrl('');
+    setActivePreset('matrix');
+  };
+
+  const selectPresetVideo = (url: string, presetName: 'neon' | 'code') => {
+    setInputUrl(url);
+    setVideoUrl(url);
+    localStorage.setItem('codeoven_video_url', url);
+    setActivePreset(presetName);
+  };
+
+  const handleSaveBgVideoUrl = (e: React.FormEvent) => {
+    e.preventDefault();
+    const normalized = normalizeVideoUrl(inputBgUrl);
+    localStorage.setItem('codeoven_hero_bg_video_url', normalized);
+    setHeroBgVideoUrl(normalized);
+    setShowConfig(false);
+  };
+
+  const handleClearBgVideo = () => {
+    localStorage.removeItem('codeoven_hero_bg_video_url');
+    setHeroBgVideoUrl('https://res.cloudinary.com/ikonicity-airban/video/upload/090b0b2e549c157f607c0cec73221888.mp4');
+    setInputBgUrl('');
+  };
+
+  const selectPresetBgVideo = (url: string) => {
+    const normalized = normalizeVideoUrl(url);
+    setInputBgUrl(normalized);
+    setHeroBgVideoUrl(normalized);
+    localStorage.setItem('codeoven_hero_bg_video_url', normalized);
+  };
+
+  const applyThemeProfile = (profileId: string) => {
+    playClickSound('success');
+    setActiveThemeProfile(profileId);
+    let name = '';
+    if (profileId === 'matrix-crypt') {
+      name = 'MATRIX OVERLOAD CRYPT';
+      setAccentColor('green');
+      selectPresetVideo('https://assets.mixkit.co/videos/preview/mixkit-matrix-style-code-screen-background-34289-large.mp4', 'code');
+      selectPresetBgVideo('https://res.cloudinary.com/ikonicity-airban/video/upload/090b0b2e549c157f607c0cec73221888.mp4');
+    } else if (profileId === 'electric-subway') {
+      name = 'ELECTRIC SUBWAY';
+      setAccentColor('cyan');
+      selectPresetVideo('https://assets.mixkit.co/videos/preview/mixkit-futuristic-subway-station-with-blue-neon-lights-42284-large.mp4', 'neon');
+      selectPresetBgVideo('https://assets.mixkit.co/videos/preview/mixkit-abstract-glowing-futuristic-lines-background-42998-large.mp4');
+    } else if (profileId === 'cyber-hologram') {
+      name = 'CYBER COCKPIT HYBRID';
+      setAccentColor('cyan');
+      selectPresetVideo('https://assets.mixkit.co/videos/preview/mixkit-matrix-style-code-screen-background-34289-large.mp4', 'code');
+      selectPresetBgVideo('https://res.cloudinary.com/ikonicity-airban/video/upload/090b0b2e549c157f607c0cec73221888.mp4');
+    } else if (profileId === 'quantum-stealth') {
+      name = 'QUANTUM STEALTH';
+      setAccentColor('green');
+      handleClearVideo();
+      selectPresetBgVideo('https://assets.mixkit.co/videos/preview/mixkit-abstract-glowing-futuristic-lines-background-42998-large.mp4');
+    }
+    setThemeSwitchingName(name);
+    setTimeout(() => {
+      setThemeSwitchingName(null);
+    }, 1200);
+    logTransmission(`DYNAMIC_PRESET LOCKED // PROFILE: ${name}`);
+  };
+
+  // Transmission logs generator
+  const logTransmission = (text: string) => {
+    setTransmissionLogs(prev => [...prev.slice(-8), `[SYS]: ${text}`]);
+    if (terminalLogsEndRef.current) {
+      terminalLogsEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // Input change logger
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    logTransmission(`KEYBOARD_INPUT DETECTED // FIELD: ${field.toUpperCase()} [LEN: ${value.length}]`);
+  };
+
+  const handleTransmitSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name || !formData.email || !formData.message) {
+      logTransmission("ERROR: SUB_SPACE ROUTE FAULT — MANDATORY FIELDS REJECTED");
+      return;
+    }
+    setTransmitting(true);
+    logTransmission("ATTEMPTING TRANSMISSION AT EMIT FREQUENCY 395.14 MHz...");
+    
+    setTimeout(() => {
+      setTransmitting(false);
+      setTransmitSuccess(true);
+      logTransmission(`SUCCESS: PACKET RECEIVED FOR ${formData.name.toUpperCase()}`);
+      logTransmission("ENCRYPTION LOG: SHA-256 SECURED");
+      setFormData({ name: '', email: '', message: '' });
+    }, 1500);
+  };
+
+  const connectMetaMask = async () => {
+    setConnectingWallet(true);
+    setWalletError('');
+    logTransmission("ATTEMPTING METAMASK WEB3 CORE PROTOCOL CONNECT...");
+    
+    const hasEthereum = typeof window !== 'undefined' && (window as any).ethereum && typeof (window as any).ethereum.request === 'function';
+    
+    if (hasEthereum) {
+      try {
+        const accounts = await (window as any).ethereum.request({ 
+          method: 'eth_requestAccounts' 
+        });
+        if (accounts && accounts.length > 0) {
+          const addr = accounts[0];
+          setWalletAddress(addr);
+          localStorage.setItem('codeoven_wallet_address', addr);
+          logTransmission(`METAMASK LINKED SUCCESSFUL // ADDR: ${addr.toUpperCase()}`);
+        } else {
+          throw new Error('No accounts authorized');
+        }
+      } catch (err: any) {
+        console.error("MetaMask connection failed:", err);
+        const errMsg = err.code !== undefined 
+          ? `error ${err.code}: ${err.message || 'Failed to connect to MetaMask'}`
+          : err.message || 'Failed to connect to MetaMask';
+        
+        setWalletError(errMsg);
+        setWalletAddress('');
+        localStorage.removeItem('codeoven_wallet_address');
+        logTransmission(`METAMASK CONNECTION FAILED // ${errMsg.toUpperCase()}`);
+      } finally {
+        setConnectingWallet(false);
+      }
+    } else {
+      // Elegant High tech fallback simulation
+      setTimeout(() => {
+        setConnectingWallet(false);
+        const simulatedAddress = '0x39ff14fb77d4e801b7a67f10cf2edea02ad67c9b';
+        setWalletAddress(simulatedAddress);
+        localStorage.setItem('codeoven_wallet_address', simulatedAddress);
+        logTransmission(`WEB3 SECURE EMULATOR ONLINE // ADDR: ${simulatedAddress.toUpperCase()}`);
+        logTransmission("[SYS]: METAMASK EXTENSION NOT DETECTED — MOUNTED COCKPIT FALLBACK LINK");
+      }, 300);
+    }
+  };
+
+  const disconnectMetaMask = () => {
+    setWalletAddress('');
+    setWalletError('');
+    localStorage.removeItem('codeoven_wallet_address');
+    logTransmission("METAMASK CORE LINK TERMINATED BY COCKPIT COMMAND");
+  };
+
+  // Strict colors
+  const primaryAccent = accentColor === 'green' ? '#39FF14' : '#00D4FF';
+  const textAccentClass = accentColor === 'green' ? 'text-[#39FF14]' : 'text-[#00D4FF]';
+  const bgAccentClass = accentColor === 'green' ? 'bg-[#39FF14]' : 'bg-[#00D4FF]';
+  const borderAccentClass = accentColor === 'green' ? 'border-[#39FF14]/50' : 'border-[#00D4FF]/50';
+  const glowShadowClass = accentColor === 'green' ? 'shadow-[0_0_20px_rgba(57,255,20,0.3)]' : 'shadow-[0_0_20px_rgba(0,212,255,0.3)]';
+
+  const styleMap = {
+    btnBase: accentColor === 'green' 
+      ? 'bg-[#39FF14] text-[#050816] hover:bg-[#32e012] font-black uppercase text-xs tracking-wider transition-all duration-300 shadow-[0_0_15px_rgba(57,255,20,0.25)]' 
+      : 'bg-[#00D4FF] text-[#050816] hover:bg-[#00b2d6] font-black uppercase text-xs tracking-wider transition-all duration-300 shadow-[0_0_15px_rgba(0,212,255,0.25)]'
+  };
+
+
+
+  return (
+    <div className="relative min-h-screen bg-[#050816] text-[#F0F4FF] overflow-x-hidden font-sans selection:bg-[#39FF14]/30 selection:text-[#39FF14]">
+      
+      {/* 1. SCALING SYSTEM SCANLINE SWEEP */}
+      <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden select-none">
+        <div className="w-full h-[3px] bg-gradient-to-r from-transparent via-[#39FF14]/15 to-transparent absolute top-0 left-0 animate-[scanline_8s_linear_infinite]" />
+      </div>
+
+      {/* Edge cockpit border lights */}
+      <div className="fixed top-0 bottom-0 left-0 w-[2.5px] z-50 hidden xl:block">
+        <div className={`w-full h-full ${accentColor === 'green' ? 'bg-[#39FF14]' : 'bg-[#00D4FF]'} opacity-40 shadow-[0_0_10px_currentColor]`} />
+      </div>
+      <div className="fixed top-0 bottom-0 right-0 w-[2.5px] z-50 hidden xl:block">
+        <div className={`w-full h-full ${accentColor === 'green' ? 'bg-[#39FF14]' : 'bg-[#00D4FF]'} opacity-40 shadow-[0_0_10px_currentColor]`} />
+      </div>
+
+      {/* Background grid structure */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(57,255,20,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(57,255,20,0.01)_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)] pointer-events-none" />
+
+      {/* BOOTING SEQUENCE SYSTEM LOADER (CYBERPUNK CONSOLE) */}
+      <AnimatePresence>
+        {booting && (
+          <motion.div 
+            className="fixed inset-0 bg-[#050816] z-50 flex flex-col items-center justify-center p-6"
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.4 }}
+          >
+            <div className="w-full max-w-xl p-8 rounded-2xl border border-white/5 bg-[#080D1F] shadow-2xl relative">
+              <div className="absolute top-3 right-4 flex items-center gap-1.5 text-[8.5px] font-mono text-[#8A9BC4]">
+                <Activity className="w-3 h-3 text-[#39FF14] animate-pulse" />
+                <span>SEC_CORE: ONLINE</span>
+              </div>
+
+              <div className="flex items-center gap-4 mb-6 pb-4 border-b border-white/5">
+                <Logo size={42} showText={false} />
+                <div className="text-left">
+                  <span className="block text-xs font-display font-black tracking-[0.2em] text-white">
+                    AIRBAN IKONICITY
+                  </span>
+                  <span className="block text-[8px] font-mono font-bold text-[#39FF14] tracking-wider uppercase">
+                    System Boot Module v4.1.022
+                  </span>
+                </div>
+              </div>
+
+              {/* Scrolling Log Terminal */}
+              <div className="bg-[#050816] rounded-xl p-5 border border-white/5 h-[230px] font-mono text-[10px] space-y-2 text-left overflow-y-auto">
+                {bootLogs.map((log, index) => (
+                  <div key={index} className={log.includes('SUCCESS') ? 'text-[#39FF14] font-bold' : 'text-[#8A9BC4]'}>
+                    {log}
+                  </div>
+                ))}
+                <div className="w-1.5 h-3.5 bg-[#39FF14] animate-pulse inline-block" />
+              </div>
+
+              <div className="flex items-center justify-between mt-6 pt-3">
+                <div className="text-[9px] font-mono text-[#8A9BC4] flex items-center gap-2">
+                  <RefreshCw className="w-3 h-3 animate-spin text-[#00D4FF]" />
+                  <span>PREPARING COCKPIT AVIONICS DECK</span>
+                </div>
+                <button
+                  onClick={() => setBooting(false)}
+                  className="px-3.5 py-1.5 rounded-md border border-[#39FF14]/30 hover:bg-[#39FF14]/10 text-[#39FF14] text-[9.5px] uppercase font-mono font-bold transition-all"
+                >
+                  Skip Boot Sequence [▶]
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 1. PRIMARY SIDEBAR: Custom Left-Side Navigation Avionics (Desktop) */}
+      <div 
+        className="fixed left-6 top-1/2 -translate-y-1/2 z-50 hidden lg:flex flex-col items-center py-7 px-3 rounded-full border bg-[#080D1F]/85 backdrop-blur-[20px] transition-all shadow-[0_12px_32px_rgba(5,8,22,0.9)]"
+        style={{ 
+          borderColor: accentColor === 'green' ? 'rgba(57, 255, 20, 0.15)' : 'rgba(0, 212, 255, 0.15)',
+          borderWidth: '1px'
+        }}
+      >
+        {/* Top sidebar element: Miniature Brand Logo Link */}
+        <div 
+          onClick={() => {
+            playClickSound('synth');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          className="cursor-pointer mb-6 group relative p-1.5 rounded-full border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all"
+          title="Scroll to Top"
+        >
+          <Logo size={24} showText={false} />
+          {/* Subtle neon ring indicator */}
+          <div className="absolute inset-0 rounded-full border border-transparent group-hover:border-current animate-pulse opacity-50 text-[#39FF14]" 
+            style={{ color: accentColor === 'green' ? '#39FF14' : '#00D4FF' }}
+          />
+        </div>
+
+        {/* Navigation Core */}
+        <nav className="flex flex-col items-center gap-4">
+          {[
+            { label: 'Home', href: '#home', icon: Home },
+            { label: 'About', href: '#about', icon: Info },
+            { label: 'Projects', href: '#projects', icon: Layers },
+            { label: 'Services', href: '#services', icon: Cpu },
+            { label: 'Contact', href: '#transmit', icon: Send },
+          ].map((item, index) => {
+            const IconComponent = item.icon;
+            return (
+              <div key={index} className="relative group flex items-center justify-center">
+                <a 
+                  href={item.href}
+                  onClick={() => playClickSound('click')}
+                  className="w-10 h-10 rounded-full flex items-center justify-center border border-white/5 bg-white/[0.01] text-[#8A9BC4] hover:text-white hover:bg-white/5 hover:scale-105 transition-all cursor-pointer relative"
+                >
+                  <IconComponent className="w-4 h-4 transition-transform group-hover:scale-110" />
+                  
+                  {/* Subtle active state indicators */}
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-1 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+                    style={{ backgroundColor: accentColor === 'green' ? '#39FF14' : '#00D4FF' }}
+                  />
+                </a>
+                
+                {/* Cyberpunk Tooltip slide-out */}
+                <div 
+                  className="absolute left-14 opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 origin-left border border-white/10 bg-[#080D1F] px-3.5 py-1.5 rounded-md text-[9px] font-bold font-mono tracking-widest uppercase shadow-xl whitespace-nowrap"
+                  style={{ 
+                    borderColor: accentColor === 'green' ? 'rgba(57, 255, 20, 0.3)' : 'rgba(0, 212, 255, 0.3)',
+                    color: accentColor === 'green' ? '#39FF14' : '#00D4FF'
+                  }}
+                >
+                  &gt;_ {item.label}
+                </div>
+              </div>
+            );
+          })}
+        </nav>
+
+        {/* Bottom Elements: Quick Download CV Mini link */}
+        <div className="mt-6 pt-5 border-t border-white/5 flex flex-col gap-3">
+          <motion.button 
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => {
+              playClickSound('success');
+              setShowCVModal(true);
+            }}
+            className="w-9 h-9 rounded-full flex items-center justify-center border transition-all cursor-pointer"
+            style={{
+              borderColor: accentColor === 'green' ? 'rgba(57, 255, 20, 0.35)' : 'rgba(0, 212, 255, 0.35)',
+              color: accentColor === 'green' ? '#39FF14' : '#00D4FF',
+              backgroundColor: 'rgba(8, 13, 31, 0.6)'
+            }}
+            title="Download CV"
+          >
+            <Download className="w-3.5 h-3.5" />
+          </motion.button>
+        </div>
+      </div>
+
+      {/* 2. UNIFIED CORNER DECK: Consolidated Global Avionics (MetaMask + Customizer + Ambient Sound) */}
+      <div 
+        className="fixed top-6 right-6 z-50 flex items-center gap-2 p-1.5 rounded-full border bg-[#080D1F]/85 backdrop-blur-[20px] transition-all shadow-[0_12px_32px_rgba(5,8,22,0.9)]"
+        style={{ 
+          borderColor: accentColor === 'green' ? 'rgba(57, 255, 20, 0.15)' : 'rgba(0, 212, 255, 0.15)',
+          borderWidth: '1px'
+        }}
+      >
+        {/* MetaMask Wallet Link */}
+        <button
+          id="connect-metamask-btn"
+          onClick={walletAddress ? disconnectMetaMask : connectMetaMask}
+          disabled={connectingWallet}
+          className={`hidden md:flex items-center justify-center h-9 w-9 rounded-full transition-all border cursor-pointer ${
+            walletAddress 
+              ? 'border-[#39FF14]/30 bg-[#39FF14]/10 text-[#39FF14]' 
+              : 'border-white/5 text-[#8A9BC4] hover:text-white hover:bg-white/5'
+          }`}
+          style={{
+            borderColor: walletAddress ? (accentColor === 'green' ? '#39FF14' : '#00D4FF') : 'rgba(255,255,255,0.05)'
+          }}
+          title={walletAddress ? `WalletLinked: ${walletAddress.slice(0, 6)}...` : "Link Web3 Wallet"}
+        >
+          <Wallet className={`w-3.5 h-3.5 ${connectingWallet ? 'animate-spin' : ''}`} />
+        </button>
+
+        {/* System Customize triggers */}
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => {
+            playClickSound('click');
+            setShowConfig(!showConfig);
+          }}
+          className="hidden md:flex items-center justify-center h-9 w-9 rounded-full border border-white/5 text-[#8A9BC4] hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+          title="System Customize Avionics"
+        >
+          <Settings className={`w-3.5 h-3.5 ${showConfig ? 'rotate-45' : ''} transition-transform`} />
+        </motion.button>
+
+        {/* Global ambient audio toggle control */}
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => {
+            toggleMute();
+            if (isMuted) {
+              setTimeout(() => playClickSound('synth'), 50);
+            } else {
+              playClickSound('click');
+            }
+          }}
+          className="hidden md:flex items-center justify-center h-9 w-9 rounded-full border border-white/5 text-[#8A9BC4] hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+          title={isMuted ? "Unmute Background Audio" : "Mute Background Audio"}
+        >
+          {isMuted ? (
+            <VolumeX className="w-3.5 h-3.5" />
+          ) : (
+            <Volume2 
+              className="w-3.5 h-3.5 animate-pulse" 
+              style={{ color: accentColor === 'green' ? '#39FF14' : '#00D4FF' }} 
+            />
+          )}
+        </motion.button>
+      </div>
+
+      {/* Wallet Error Alert Banner overlay */}
+      <AnimatePresence>
+        {walletError && (
+          <div className="fixed top-20 right-6 z-50 flex flex-col items-end pointer-events-none max-w-sm w-full">
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="px-4 py-3 bg-red-950/90 border border-red-500/40 rounded-lg text-red-500 text-[10px] font-mono pointer-events-auto shadow-lg flex items-center gap-2 w-full"
+            >
+              <Shield className="w-3.5 h-3.5 text-red-500 shrink-0" />
+              <div className="flex-1 text-left">
+                <span className="font-bold uppercase tracking-wider block text-[8px] text-red-500">// WALLET CONNECTION ERROR</span>
+                <span id="wallet-error-msg" className="font-semibold block">{walletError}</span>
+              </div>
+              <button 
+                onClick={() => setWalletError('')}
+                className="text-red-400 hover:text-white font-black text-xs cursor-pointer px-1"
+                aria-label="Dismiss error"
+              >
+                ×
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* CORE COCKPIT METRICS (LIVE SYSTEM DIAGNOSTICS LOG) */}
+      <div className="w-full max-w-7xl mx-auto px-6 mt-24 md:mt-28 relative z-20 hidden md:block">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3.5 bg-[#080D1F] border border-white/5 rounded-2xl p-4 font-mono text-[10px] text-[#8A9BC4] text-left">
+          
+          <div className="space-y-1">
+            <span className="block text-[8px] tracking-widest font-bold uppercase text-[#8A9BC4]">COCKPIT ENGINE STATUS</span>
+            <span className="block text-[#39FF14] font-black flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#39FF14] inline-block animate-pulse" />
+              SYSTEM_SECURE
+            </span>
+          </div>
+
+          <div className="space-y-1">
+            <span className="block text-[8px] tracking-widest font-bold uppercase text-[#8A9BC4]">REALTIME SYSTEM LATENCY</span>
+            <span className="block text-[#00D4FF] font-black">
+              {ping}ms (ENUGU_NODE)
+            </span>
+          </div>
+
+          <div className="space-y-1 col-span-2">
+            <span className="block text-[8px] tracking-widest font-bold uppercase text-[#8A9BC4]">SECURE SYSTEM RUNTIME (CODING UPTIME)</span>
+            <span className="block text-white font-black font-mono">
+              {uptime.d}D {uptime.h}H {uptime.m}M {uptime.s}S {uptime.ms}MS
+            </span>
+          </div>
+
+          <div className="space-y-1 col-span-2">
+            <span className="block text-[8px] tracking-widest font-bold uppercase text-[#8A9BC4]">SYSTEM LOCAL DATE & TIME</span>
+            <span className="block font-black font-mono" style={{ color: accentColor === 'green' ? '#39FF14' : '#00D4FF' }}>
+              {localDateTime || 'LOADING_DATETIME...'}
+            </span>
+          </div>
+
+          <div className="space-y-1 col-span-2 lg:col-span-1 hidden md:block">
+            <span className="block text-[8px] tracking-widest font-bold uppercase text-[#8A9BC4]">CORE ARCHITECTURE</span>
+            <span className="block text-[#39FF14] font-bold">
+              PORTFOLIO_OS V4.1
+            </span>
+          </div>
+
+          <div className="space-y-1 col-span-2 lg:col-span-1 hidden lg:block">
+            <span className="block text-[8px] tracking-widest font-bold uppercase text-[#8A9BC4]">METAMASK BLOCKCHAIN LINK</span>
+            <span className={`block font-bold truncate ${walletError ? 'text-red-500 font-mono' : walletAddress ? 'text-[#39FF14]' : 'text-[#8A9BC4]/50'}`}>
+              {walletError ? `ERROR: ${walletError}` : walletAddress ? `${walletAddress.slice(0, 8)}...${walletAddress.slice(-5)}` : 'DISCONNECTED [⬡]'}
+            </span>
+          </div>
+
+        </div>
+      </div>
+
+      {/* REAL-TIME DYNAMIC SYSTEM TELEMETRY DOCK & SCROLL PROGRESS DOCK BAR */}
+      <ScrollProgressHUD accentColor={accentColor} />
+      <MobileFastScroller accentColor={accentColor} onSettingsClick={() => setShowConfig(true)} />
+
+      {/* MODULAR SECTIONS 1 to 4 (AND 5 & 8 SYSTEMS) */}
+      <HeroSection 
+        accentColor={accentColor} 
+        videoUrl={videoUrl} 
+        heroBgVideoUrl={heroBgVideoUrl} 
+        availabilityStatus={availability.status} 
+        isMuted={isMuted}
+        onDownloadCVClick={() => setShowCVModal(true)}
+      />
+      
+      <SectionDivider label="NARRATIVE DECK" sourceSector="SEC_000" targetSector="SEC_001" accentColor={accentColor} />
+      <AboutSection accentColor={accentColor} />
+      
+      <SectionDivider label="SKILLS BLUEPRINT" sourceSector="SEC_001" targetSector="SEC_003" accentColor={accentColor} />
+      <SkillsSection accentColor={accentColor} />
+      
+      <SectionDivider label="PROJECTS BENTO" sourceSector="SEC_003" targetSector="SEC_004" accentColor={accentColor} />
+      <ProjectsSection accentColor={accentColor} dbProjects={dbProjects} />
+      
+      <SectionDivider label="CHRONICLES INDEX" sourceSector="SEC_004" targetSector="SEC_002" accentColor={accentColor} />
+      <WorkExperienceSection accentColor={accentColor} />
+      
+      <SectionDivider label="SERVICES GRAPH" sourceSector="SEC_002" targetSector="SEC_005" accentColor={accentColor} />
+      <ServicesSection accentColor={accentColor} />
+      
+      <SectionDivider label="SYSTEM CREDENTIALS" sourceSector="SEC_005" targetSector="SEC_006" accentColor={accentColor} />
+      <CertificationsSection accentColor={accentColor} />
+      
+      <SectionDivider label="FEEDBACK RECORDS" sourceSector="SEC_006" targetSector="SEC_007" accentColor={accentColor} />
+      <TestimonialsSection accentColor={accentColor} dbTestimonials={dbTestimonials} />
+      
+      <SectionDivider label="CONTACT COCKPIT" sourceSector="SEC_007" targetSector="SEC_008" accentColor={accentColor} />
+      <ContactSection accentColor={accentColor} />
+
+
+      {/* DYNAMIC SYSTEM CONFIG / AVIONICS OVERLAY DRAWER */}
+      <AnimatePresence>
+        {showConfig && (
+          <motion.div 
+            className="fixed inset-0 bg-black/85 backdrop-blur-md z-[9999] flex justify-end cursor-default"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="absolute inset-0" onClick={() => setShowConfig(false)} />
+
+            <motion.div 
+               className="relative w-full max-w-sm bg-[#080D1F] border-l border-white/10 h-full p-6 overflow-y-auto flex flex-col justify-between text-left"
+               initial={{ x: '100%' }}
+               animate={{ x: 0 }}
+               exit={{ x: '100%' }}
+               transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+             >
+               <div className="space-y-6">
+                 
+                 {/* Embedded branded dynamic vector logo showcase from uploaded asset */}
+                 <div className="flex justify-center py-6 border-b border-white/5 mb-2">
+                   <Logo size={90} showText={true} />
+                 </div>
+                 
+                 <div className="flex items-center justify-between border-b border-white/5 pb-4 font-mono">
+                   <div className="flex items-center gap-2">
+                     <Sliders className={`w-4 h-4 ${accentColor === 'green' ? 'text-[#39FF14]' : 'text-[#00D4FF]'}`} />
+                     <h3 className="font-extrabold tracking-tight text-white text-xs uppercase">Interface Preferences</h3>
+                   </div>
+                   <button 
+                     onClick={() => setShowConfig(false)}
+                     className="text-white hover:text-red-400 text-[10px] uppercase cursor-pointer font-bold font-mono"
+                   >
+                     Close [X]
+                   </button>
+                 </div>
+ 
+                 <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5 text-[10px] leading-relaxed text-[#8A9BC4] font-mono">
+                   Customize the visual environments of this interactive portfolio. Change accents, ambient space
+
+                  {/* Dynamic Comprehensive Presets Selection */}
+                  <div className="space-y-2.5 font-mono border-t border-white/10 pt-4 mt-4">
+                    <label className="block text-[8px] tracking-widest text-[#8A9BC4] uppercase font-bold mb-1.5">
+                      Dynamic Theme Presets Profile
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => applyThemeProfile('matrix-crypt')}
+                        onMouseEnter={() => playClickSound('hover')}
+                        className={`p-2 rounded border text-left cursor-pointer transition-all ${activeThemeProfile === 'matrix-crypt' ? 'border-[#39FF14] bg-[#39FF14]/5 text-white animate-pulse' : 'border-white/5 bg-white/[0.01] text-slate-400'}`}
+                      >
+                        <span className="block text-[6px] text-slate-500 mb-0.5 font-mono">PROFILE 01</span>
+                        <span className="text-[9px] font-bold block">Matrix Crypt</span>
+                      </button>
+
+                      <button
+                        onClick={() => applyThemeProfile('electric-subway')}
+                        onMouseEnter={() => playClickSound('hover')}
+                        className={`p-2 rounded border text-left cursor-pointer transition-all ${activeThemeProfile === 'electric-subway' ? 'border-[#00D4FF] bg-[#00D4FF]/5 text-white animate-pulse' : 'border-white/5 bg-white/[0.01] text-slate-400'}`}
+                      >
+                        <span className="block text-[6px] text-slate-500 mb-0.5 font-mono">PROFILE 02</span>
+                        <span className="text-[10px] font-bold block">Cyber Subway</span>
+                      </button>
+
+                      <button
+                        onClick={() => applyThemeProfile('cyber-hologram')}
+                        onMouseEnter={() => playClickSound('hover')}
+                        className={`p-2 rounded border text-left cursor-pointer transition-all ${activeThemeProfile === 'cyber-hologram' ? 'border-[#00D4FF] bg-[#00D4FF]/5 text-white animate-pulse' : 'border-white/5 bg-white/[0.01] text-slate-400'}`}
+                      >
+                        <span className="block text-[7px] text-slate-500 mb-0.5 font-mono">PROFILE 03</span>
+                        <span className="text-[9px] font-bold block">Hybrid Hologram</span>
+                      </button>
+
+                      <button
+                        onClick={() => applyThemeProfile('quantum-stealth')}
+                        onMouseEnter={() => playClickSound('hover')}
+                        className={`p-2 rounded border text-left cursor-pointer transition-all ${activeThemeProfile === 'quantum-stealth' ? 'border-[#39FF14] bg-[#39FF14]/5 text-[#39FF14] animate-pulse' : 'border-white/5 bg-white/[0.01] text-slate-400'}`}
+                      >
+                        <span className="block text-[7px] text-slate-500 mb-0.5 font-mono">PROFILE 04</span>
+                        <span className="text-[9px] font-bold block">Quantum Void</span>
+                      </button>
+                    </div>
+                  </div>, or avatar loops below.
+                 </div>
+ 
+                 {/* Primary Accent Selection */}
+                 <div className="space-y-2.5 font-mono">
+                   <label className="block text-[8px] tracking-widest text-[#8A9BC4] uppercase font-bold">
+                     Primary Accent Color
+                   </label>
+                   
+                   <div className="grid grid-cols-2 gap-2 font-mono">
+                     <button
+                       onClick={() => setAccentColor('green')}
+                       className={`p-2.5 rounded-lg border text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer ${accentColor === 'green' ? 'border-[#39FF14] bg-[#39FF14]/5 text-white' : 'border-white/5 bg-white/[0.01] text-slate-400 hover:text-white'}`}
+                     >
+                       <span className="w-2 h-2 rounded-full bg-[#39FF14] shadow-[0_0_8px_#39FF14]" />
+                       <span className="text-[10px] font-bold">Neon Green</span>
+                     </button>
+                     
+                     <button
+                       onClick={() => setAccentColor('cyan')}
+                       className={`p-2.5 rounded-lg border text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer ${accentColor === 'cyan' ? 'border-[#00D4FF] bg-[#00D4FF]/5 text-white' : 'border-white/5 bg-white/[0.01] text-slate-400 hover:text-white'}`}
+                     >
+                       <span className="w-2 h-2 rounded-full bg-[#00D4FF] shadow-[0_0_8px_#00D4FF]" />
+                       <span className="text-[10px] font-bold">Electric Cyan</span>
+                     </button>
+                   </div>
+                 </div>
+ 
+                 {/* Hologram Presets */}
+                 <div className="space-y-2.5 font-mono">
+                   <label className="block text-[8px] tracking-widest text-[#8A9BC4] uppercase font-bold">
+                     Avatar Visual Presets
+                   </label>
+                   
+                   <div className="grid grid-cols-2 gap-2">
+                     <button
+                       onClick={() => selectPresetVideo('https://assets.mixkit.co/videos/preview/mixkit-futuristic-subway-station-with-blue-neon-lights-42284-large.mp4', 'neon')}
+                       className={`p-3 rounded-lg border text-left text-[11px] font-bold transition-all cursor-pointer ${activePreset === 'neon' ? 'border-[#39FF14] bg-[#39FF14]/5 text-white' : 'border-white/5 hover:border-white/10 text-[#8A9BC4]'}`}
+                     >
+                       <span className="block text-[7px] text-slate-500 mb-1">01 // SCI-FI</span>
+                       Futurist Station
+                     </button>
+ 
+                     <button
+                       onClick={() => selectPresetVideo('https://assets.mixkit.co/videos/preview/mixkit-matrix-style-code-screen-background-34289-large.mp4', 'code')}
+                       className={`p-3 rounded-lg border text-left text-[11px] font-bold transition-all cursor-pointer ${activePreset === 'code' ? 'border-[#39FF14] bg-[#39FF14]/5 text-white' : 'border-white/5 hover:border-white/10 text-[#8A9BC4]'}`}
+                     >
+                       <span className="block text-[7px] text-slate-500 mb-1">02 // DIGITAL</span>
+                       Matrix Stream
+                     </button>
+                   </div>
+ 
+                   <button
+                     onClick={handleClearVideo}
+                     className="w-full text-center py-2 border border-white/5 hover:border-white/10 hover:bg-white/5 text-slate-400 rounded-lg text-[9px] uppercase font-bold transition-all cursor-pointer"
+                   >
+                     Reset Visual Avatar
+                   </button>
+                 </div>
+ 
+                 {/* Environment backdrop loop presets */}
+                 <div className="space-y-3 pt-4 border-t border-white/5 font-mono">
+                   <span className="block text-[8px] tracking-widest text-[#8A9BC4] uppercase font-bold">
+                     Hero Environment Loop
+                   </span>
+                   <div className="grid grid-cols-2 gap-2">
+                     <button
+                       onClick={() => selectPresetBgVideo('https://res.cloudinary.com/ikonicity-airban/video/upload/090b0b2e549c157f607c0cec73221888.mp4')}
+                       className={`py-2 px-2.5 rounded-lg border text-center text-[10px] font-bold transition-all cursor-pointer ${heroBgVideoUrl === 'https://res.cloudinary.com/ikonicity-airban/video/upload/090b0b2e549c157f607c0cec73221888.mp4' ? 'border-[#39FF14] bg-[#39FF14]/5 text-white' : 'border-white/5 hover:border-white/10 text-[#8A9BC4]'}`}
+                     >
+                       Cloudinary Neon
+                     </button>
+                     <button
+                       onClick={() => selectPresetBgVideo('https://assets.mixkit.co/videos/preview/mixkit-abstract-glowing-futuristic-lines-background-42998-large.mp4')}
+                       className={`py-2 px-2.5 rounded-lg border text-center text-[10px] font-bold transition-all cursor-pointer ${heroBgVideoUrl === 'https://assets.mixkit.co/videos/preview/mixkit-abstract-glowing-futuristic-lines-background-42998-large.mp4' ? 'border-[#39FF14] bg-[#39FF14]/5 text-white' : 'border-white/5 hover:border-white/10 text-[#8A9BC4]'}`}
+                     >
+                       Futuristic Vectors
+                     </button>
+                   </div>
+ 
+                   <button
+                     onClick={handleClearBgVideo}
+                     className="w-full text-center py-2 border border-white/5 hover:border-white/10 text-[#8A9BC4] hover:bg-white/5 rounded-lg text-[9px] uppercase transition-all cursor-pointer font-bold"
+                   >
+                     Reset Ambient Background
+                   </button>
+                 </div>
+ 
+                 {/* Mute toggle configuration and status indicator */}
+                 <div className="space-y-2 pt-4 border-t border-white/5 font-mono">
+                   <span className="block text-[8px] tracking-widest text-[#8A9BC4] uppercase font-bold">
+                     Ambient Audio Loop
+                   </span>
+                   <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/[0.01] border border-white/5">
+                     <div className="flex flex-col text-[10px]">
+                       <span className="font-bold text-white uppercase">Atmospheric Synth</span>
+                       <span className="text-[8px] text-[#8A9BC4]">{isMuted ? "MUTED // SILENT" : "PLAYING // LOOP"}</span>
+                     </div>
+                     
+                     <button
+                       onClick={toggleMute}
+                       className={`px-3 py-1.5 rounded text-[9px] font-bold uppercase cursor-pointer transition-all ${isMuted ? 'bg-[#39FF14]/10 border border-[#39FF14]/10 text-[#39FF14]' : 'bg-white/5 text-slate-300'}`}
+                     >
+                       {isMuted ? "Unmute" : "Mute"}
+                     </button>
+                   </div>
+                 </div>
+ 
+               </div>
+ 
+               <div className="pt-6 border-t border-white/5 text-[9px] text-[#8A9BC4] font-mono mt-auto pt-4 flex justify-between items-center">
+                 <span>DISPLAY_DYNAMICS</span>
+                 <span>SYSTEM OS V4.2</span>
+               </div>
+ 
+             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <FooterSection 
+        accentColor={accentColor} 
+        onOpenAdmin={() => setShowAdmin(true)} 
+        availabilityStatus={availability.status} 
+      />
+
+      {/* CURRICULUM VITAE MODAL */}
+      <CVModal 
+        isOpen={showCVModal} 
+        onClose={() => setShowCVModal(false)} 
+        accentColor={accentColor} 
+      />
+
+      {/* SECURE ADMINISTRATOR PORTAL OVERLAY */}
+      <AnimatePresence>
+        {showAdmin && (
+          <div className="fixed inset-0 z-[9999] overflow-y-auto">
+            <AdminSection 
+              accentColor={accentColor} 
+              onClose={() => setShowAdmin(false)} 
+            />
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* PERSISTENT FLOATING WHATSAPP CHAT BUTTON */}
+      <AnimatePresence>
+        {showWhatsApp && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="fixed z-50 pointer-events-auto"
+            style={{ bottom: '1rem', right: '1rem' }}
+          >
+            <a
+              href="https://wa.me/2348169862852?text=Hello%20Eban!%20I%20saw%20your%20portfolio..."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center w-12 h-12 bg-[#25D366] hover:bg-[#20ba56] text-white rounded-full shadow-[0_4px_20px_rgba(37,211,102,0.45)] transition-all duration-300 transform hover:scale-110 cursor-pointer"
+              title="Chat on WhatsApp"
+            >
+              <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current text-white">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.457L0 24zm6.59-4.846c1.6.95 3.1 1.45 4.7 1.45 5.2 0 9.4-4.2 9.4-9.4 0-2.5-1-4.9-2.8-6.7-1.8-1.8-4.1-2.8-6.6-2.8-5.2 0-9.4 4.2-9.4 9.4 0 1.8.5 3.5 1.4 5l-.4 1.5.4-.4.1.2zm10.1-6.1c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.5.1-.2.2-.6.8-.8.9-.1.2-.3.2-.5.1-.7-.3-1.4-.7-2-1.2-.5-.5-.9-1.1-1-1.3-.1-.2 0-.3.1-.4.1-.1.2-.2.3-.3.1-.1.1-.2.2-.3 0-.1 0-.2-.1-.3-.1-.3-.5-1.3-.7-1.8-.2-.5-.4-.4-.5-.4h-.5c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.4s1 2.8 1.1 3c.1.2 2 3.1 4.9 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.4-.6 1.6-1.1.2-.5.2-.9.1-1-.1-.1-.3-.2-.6-.3z" />
+              </svg>
+            </a>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* THEME SWITCH SCI-FI SCAN CALIBRATION SCREEN OVERLAY */}
+      <AnimatePresence>
+        {themeSwitchingName && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#050816]/95 backdrop-blur-md select-none pointer-events-auto"
+          >
+            {/* Horizontal scanline sweeper line */}
+            <motion.div
+              initial={{ top: "0%" }}
+              animate={{ top: "100%" }}
+              transition={{ duration: 1.1, ease: "linear", repeat: Infinity }}
+              className="absolute left-0 w-full h-[3px] opacity-80"
+              style={{
+                background: accentColor === 'green' 
+                  ? 'linear-gradient(90deg, transparent, #39FF14, transparent)' 
+                  : 'linear-gradient(90deg, transparent, #00D4FF, transparent)',
+                boxShadow: accentColor === 'green'
+                  ? '0 0 15px #39FF14'
+                  : '0 0 15px #00D4FF'
+              }}
+            />
+
+            {/* Grid background overlay */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_at_center,black_60%,transparent_100%)] pointer-events-none" />
+
+            <div className="text-center space-y-6 max-w-sm px-6 relative z-10 font-mono">
+              <div className="flex items-center justify-center">
+                <div 
+                  className="w-16 h-16 border-2 border-dashed rounded-full flex items-center justify-center animate-[spin_8s_linear_infinite]"
+                  style={{ borderColor: accentColor === 'green' ? 'rgba(57,255,20,0.3)' : 'rgba(0,212,255,0.3)' }}
+                >
+                  <div 
+                    className="w-10 h-10 border rounded-full flex items-center justify-center animate-ping"
+                    style={{ borderColor: accentColor === 'green' ? '#39FF14' : '#00D4FF' }}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <span className="block text-[8px] text-[#8A9BC4] uppercase tracking-[0.25em] font-extrabold animate-pulse">
+                  // PORTAL CONFIG LOCK CALIBRATING...
+                </span>
+                <h2 
+                  className="text-lg md:text-xl font-bold tracking-widest uppercase font-display"
+                  style={{ 
+                    color: accentColor === 'green' ? '#39FF14' : '#00D4FF',
+                    textShadow: accentColor === 'green' ? '0 0 12px rgba(57,255,20,0.45)' : '0 0 12px rgba(0,212,255,0.45)'
+                  }}
+                >
+                  {themeSwitchingName}
+                </h2>
+                <div className="text-[9px] text-[#8A9BC4] space-y-1 pt-2">
+                  <p className="font-bold flex items-center justify-center gap-1.5 text-white">
+                    <span className="w-1.5 h-1.5 rounded-full animate-ping" style={{ backgroundColor: accentColor === 'green' ? '#39FF14' : '#00D4FF' }} />
+                    RE-ROUTING NEON ENERGY NODES...
+                  </p>
+                  <p className="text-[7.5px] text-slate-500 uppercase tracking-wide">
+                    SECURE_JWT: OK · MATRIX_BUFFER: COMMITTED · SYS_THEME: APPLIED
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+    </div>
+  );
+}

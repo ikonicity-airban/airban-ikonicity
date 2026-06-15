@@ -1,0 +1,466 @@
+import { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ExternalLink, ChevronRight, Server, PhoneCall, Globe, Truck, Users, Search, Code, Cpu, ShieldAlert, X } from 'lucide-react';
+import { portfolioData } from '../data';
+import { Project } from '../types';
+import ProjectDetailModal from './ProjectDetailModal';
+import { playClickSound } from '../utils';
+
+interface ProjectsSectionProps {
+  accentColor: 'green' | 'cyan';
+  dbProjects?: any[];
+}
+
+export default function ProjectsSection({ accentColor, dbProjects }: ProjectsSectionProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTag, setSelectedTag] = useState<string>('all');
+  const [hoveredPid, setHoveredPid] = useState<string | null>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const accentTextClass = accentColor === 'green' ? 'text-[#39FF14]' : 'text-[#00D4FF]';
+  const bgAccentClass = accentColor === 'green' ? 'bg-[#39FF14]' : 'bg-[#00D4FF]';
+  const borderAccentClass = accentColor === 'green' ? 'border-[#39FF14]' : 'border-[#00D4FF]';
+  const accentBorderHoverClass = accentColor === 'green' ? 'hover:border-[#39FF14]/30' : 'hover:border-[#00D4FF]/30';
+
+  // Parse project source: if dbProjects exists and isn't empty, use formatted db projects. Otherwise use static data.
+  const projectsToUse: Project[] = useMemo(() => {
+    return dbProjects && dbProjects.length > 0
+      ? dbProjects.map((p, idx) => ({
+          id: p.slug || p.id,
+          title: p.title,
+          subtitle: p.description,
+          tag: p.role,
+          description: p.longDesc || p.description,
+          status: p.status,
+          logoText: p.title.slice(0, 2).toUpperCase(),
+          tech: p.stack || [],
+          links: [
+            { label: 'Live Site', url: p.liveUrl || '#' },
+            { label: 'Repo', url: p.repoUrl || '#' }
+          ],
+          meta: p.year ? `YEAR: ${p.year} // DB_SYNC` : `TX_RATE: 1.8s // DB_SYNC`
+        }))
+      : portfolioData.projects;
+  }, [dbProjects]);
+
+  // Extract unique tags/categories for filter pills
+  const availableTags = useMemo(() => {
+    const tags = new Set<string>();
+    projectsToUse.forEach(p => {
+      if (p.tag) tags.add(p.tag);
+    });
+    return ['all', ...Array.from(tags)];
+  }, [projectsToUse]);
+
+  // Handle fuzzy search & tag selection filter
+  const filteredProjects = useMemo(() => {
+    return projectsToUse.filter(project => {
+      const matchTag = selectedTag === 'all' || project.tag === selectedTag;
+      const query = searchQuery.toLowerCase().trim();
+      if (!query) return matchTag;
+
+      const matchText = 
+        project.title.toLowerCase().includes(query) ||
+        project.subtitle.toLowerCase().includes(query) ||
+        project.description.toLowerCase().includes(query) ||
+        project.tag.toLowerCase().includes(query) ||
+        project.tech.some(t => t.toLowerCase().includes(query));
+
+      return matchTag && matchText;
+    });
+  }, [projectsToUse, searchQuery, selectedTag]);
+
+  const handleOpenDetail = (project: Project) => {
+    playClickSound('synth');
+    setSelectedProject(project);
+    setIsModalOpen(true);
+  };
+
+  const renderStatus = (statusStr: string) => {
+    const isLive = statusStr.includes('Live') || statusStr.includes('🟢');
+    return (
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[8.5px] font-mono uppercase font-bold ${isLive ? 'border-[#39FF14]/30 bg-[#39FF14]/5 text-[#39FF14]' : 'border-amber-400/30 bg-amber-400/5 text-amber-300'}`}>
+        <span className={`w-1 h-1 rounded-full ${isLive ? 'bg-[#39FF14] animate-pulse' : 'bg-amber-400'} inline-block`} />
+        {statusStr}
+      </span>
+    );
+  };
+
+  // Check if current view matches default search parameters so we can display Bento Layout.
+  // We prefer the beautifully planned Bento view for defaults to satisfy pixel perfection.
+  const isDefaultView = searchQuery === '' && selectedTag === 'all';
+
+  // Find standard bento slots for default layout mapping
+  const geekCreations = useMemo(() => projectsToUse.find(p => p.id === 'geek-creations') || projectsToUse[0], [projectsToUse]);
+  const icatholicIgbo = useMemo(() => projectsToUse.find(p => p.id === 'icatholic-igbo') || projectsToUse[1], [projectsToUse]);
+  const biddo = useMemo(() => projectsToUse.find(p => p.id === 'biddo') || projectsToUse[2], [projectsToUse]);
+  const standardProjects = useMemo(() => projectsToUse.filter(
+    p => p.id !== geekCreations?.id && p.id !== icatholicIgbo?.id && p.id !== biddo?.id
+  ), [projectsToUse, geekCreations, icatholicIgbo, biddo]);
+
+  return (
+    <section id="projects" className="py-24 border-t border-white/5 relative z-20">
+      <motion.div 
+        className="max-w-7xl mx-auto px-6"
+        initial={{ opacity: 0, y: 35 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-120px" }}
+        transition={{ duration: 0.7, ease: "easeOut" }}
+      >
+        
+        {/* Section Heading */}
+        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 mb-12 text-left">
+          <div>
+            <span className={`text-[10px] uppercase font-mono tracking-[0.25em] font-extrabold ${accentTextClass} block mb-1`}>
+              &gt;_ SECTOR_004 // PRODUCTION SYSTEMS DECK
+            </span>
+            <h2 className="text-3xl font-black text-white tracking-tight leading-none font-display uppercase">
+              Project Deployments Bento
+            </h2>
+          </div>
+          <p className="text-xs text-[#8A9BC4] max-w-sm font-mono uppercase">
+            A real bento mapping representing high-performance custom engines and commercial software architectures.
+          </p>
+        </div>
+
+        {/* SMART COCKPIT SEARCH BAR & FILTER CONSOLE */}
+        <div className="mb-12 space-y-4">
+          <div className="flex flex-col md:flex-row gap-4 items-stretch font-mono">
+            {/* Input wrap */}
+            <div className="relative flex-1">
+              <div className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none">
+                <Search className={`w-3.5 h-3.5 ${accentTextClass} opacity-60`} />
+              </div>
+              <input
+                type="text"
+                placeholder="LAUNCH SMART CRYPTO_QUERY... (E.g. Next.js, Web3, iOS, Python)"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`w-full bg-slate-950/75 border border-white/10 rounded-xl pl-10 pr-10 py-3 text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-${accentColor === 'green' ? '[#39FF14]' : '[#00D4FF]'} focus:ring-1 focus:ring-${accentColor === 'green' ? '[#39FF14]' : '[#00D4FF]'}/20 transition-all uppercase tracking-wide`}
+              />
+              <div className="absolute inset-y-0 right-3 flex items-center gap-2">
+                {searchQuery ? (
+                  <button 
+                    onClick={() => setSearchQuery('')}
+                    className="p-1 rounded bg-white/5 hover:bg-white/10 text-white cursor-pointer"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                ) : (
+                  <span className="text-[7.5px] font-bold text-slate-500 bg-white/5 px-2 py-1 rounded">SYS_READY</span>
+                )}
+              </div>
+            </div>
+
+            {/* Quick telemetry counter */}
+            <div className={`p-3 bg-slate-950/40 border border-white/5 rounded-xl flex items-center justify-between md:justify-start gap-4 text-[9px] min-w-[140px]`}>
+              <span className="text-slate-500">MATCH_NODES:</span>
+              <AnimatePresence mode="wait">
+                <motion.span 
+                  key={filteredProjects.length}
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                  className={`font-black text-white px-2 py-0.5 rounded-sm bg-white/5 ${accentTextClass}`}
+                >
+                  {filteredProjects.length} / {projectsToUse.length}
+                </motion.span>
+              </AnimatePresence>
+            </div>
+          </div>
+
+          {/* Quick Tag Pills */}
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {availableTags.map((tag) => {
+              const isActive = selectedTag === tag;
+              return (
+                <button
+                  key={tag}
+                  onClick={() => {
+                    playClickSound('click');
+                    setSelectedTag(tag);
+                  }}
+                  onMouseEnter={() => playClickSound('hover')}
+                  className={`px-3 py-1.5 rounded-lg border text-[8.5px] font-mono uppercase font-bold tracking-wider cursor-pointer transition-all ${isActive ? `${borderAccentClass} ${bgAccentClass}/10 text-white shadow-[0_0_10px_rgba(57,255,20,0.05)]` : 'border-white/5 bg-slate-950/20 text-slate-400 hover:text-white hover:border-white/15'}`}
+                >
+                  {tag === 'all' ? '● ALL DEPLOYMENTS' : tag}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* COMPREHENSIVE PRESENTATION FLOW */}
+        {isDefaultView ? (
+          /* BENTO GRID (Upper Section: Ratios 4:4 Left and 2:2 Top/Bottom Right) */
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch mb-8">
+            
+            {/* LEFT CONTAINER Slot: GEEK CREATIONS */}
+            {geekCreations && (
+              <div 
+                className={`lg:col-span-8 relative rounded-3xl p-6 md:p-8 bg-[#080D1F] border border-white/5 ${accentBorderHoverClass} hover:shadow-[0_0_25px_rgba(57,255,20,0.04)] transition-all duration-300 flex flex-col justify-between group overflow-hidden min-h-[420px] cursor-pointer`}
+                onMouseEnter={() => {
+                  setHoveredPid(geekCreations.id);
+                  playClickSound('hover');
+                }}
+                onMouseLeave={() => setHoveredPid(null)}
+                onClick={() => handleOpenDetail(geekCreations)}
+              >
+                {/* Scanline Sweep overlay on hover */}
+                {hoveredPid === geekCreations.id && (
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#39FF14]/5 to-transparent h-1/2 w-full top-0 left-0 animate-[scanline_2s_linear_infinite]" />
+                )}
+
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-white/[0.01] border border-white/10 flex items-center justify-center font-display font-black text-[#39FF14] text-xs">
+                        {geekCreations.logoText}
+                      </div>
+                      <div>
+                        <span className="block text-[8px] text-[#8A9BC4] uppercase tracking-wider font-mono">PRIMARY FEATURE CARD [4:4]</span>
+                        <span className="block text-white font-bold text-xs uppercase font-mono">{geekCreations.tag}</span>
+                      </div>
+                    </div>
+                    {renderStatus(geekCreations.status)}
+                  </div>
+
+                  <div className="space-y-3.5 text-left">
+                    <h3 className="text-2xl md:text-3xl font-display font-black text-white tracking-tight uppercase leading-none group-hover:text-[#39FF14] transition-colors">
+                      {geekCreations.title}
+                    </h3>
+                    <p className="text-xs md:text-sm text-[#39FF14] font-mono leading-none font-bold">
+                      {geekCreations.subtitle}
+                    </p>
+                    <p className="text-xs text-[#8A9BC4] leading-relaxed max-w-2xl font-normal pt-2">
+                      {geekCreations.description}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-6 border-t border-white/5 space-y-4 mt-6">
+                  <div className="flex flex-wrap gap-1.5">
+                    {geekCreations.tech.map((t, idx) => (
+                      <span key={idx} className="text-[9px] font-mono px-2.5 py-1 rounded bg-white/[0.02] border border-white/5 text-[#8A9BC4]">
+                        {t.toUpperCase()}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between font-mono text-[9px] text-[#8A9BC4]">
+                    <span>{geekCreations.meta}</span>
+                    <div className="flex items-center gap-3">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenDetail(geekCreations);
+                        }}
+                        className="inline-flex items-center gap-1 font-bold text-white hover:text-[#39FF14] transition-colors px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 text-[9.5px]"
+                      >
+                        INSPECT SPECT_DECK
+                        <ChevronRight className="w-3 h-3 text-[#39FF14]" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* RIGHT CONTAINER COLUMN */}
+            <div className="lg:col-span-4 flex flex-col gap-6 justify-between items-stretch">
+              
+              {/* Top Right Slot: iCATHOLIC IGBO */}
+              {icatholicIgbo && (
+                <div 
+                  className={`rounded-3xl p-6 bg-[#080D1F] border border-white/5 ${accentBorderHoverClass} hover:shadow-[0_0_25px_rgba(57,255,20,0.04)] transition-all duration-300 flex flex-col justify-between group overflow-hidden flex-1 cursor-pointer`}
+                  onMouseEnter={() => {
+                    setHoveredPid(icatholicIgbo.id);
+                    playClickSound('hover');
+                  }}
+                  onMouseLeave={() => setHoveredPid(null)}
+                  onClick={() => handleOpenDetail(icatholicIgbo)}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-[8px] text-[#8A9BC4] uppercase tracking-wider font-mono">BENTO_SLOT [2:2]</span>
+                      {renderStatus(icatholicIgbo.status)}
+                    </div>
+
+                    <div className="space-y-1 text-left">
+                      <span className="block text-[9.5px] text-[#00D4FF] font-mono leading-none uppercase tracking-wide font-bold">{icatholicIgbo.tag}</span>
+                      <h3 className="text-lg md:text-xl font-display font-black text-white uppercase group-hover:text-[#39FF14] transition-colors pt-1">
+                        {icatholicIgbo.title}
+                      </h3>
+                      <p className="text-[10px] text-[#8A9BC4] leading-relaxed pt-1.5 font-normal">
+                        {icatholicIgbo.subtitle}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-white/5 mt-4 space-y-4">
+                    <div className="flex flex-wrap gap-1">
+                      {icatholicIgbo.tech.map((t, idx) => (
+                        <span key={idx} className="text-[8px] font-mono px-2 py-0.5 rounded bg-white/[0.02] border border-white/5 text-[#8A9BC4]">
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center justify-between font-mono text-[8px] text-[#8A9BC4]">
+                      <span>{icatholicIgbo.meta}</span>
+                      <span className="text-white hover:text-[#39FF14] font-black group-hover:underline">SPEC_VIEW ▶</span>
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* Bottom Right Slot: BIDDO */}
+              {biddo && (
+                <div 
+                  className={`rounded-3xl p-6 bg-[#080D1F] border border-white/5 ${accentBorderHoverClass} hover:shadow-[0_0_25px_rgba(57,255,20,0.04)] transition-all duration-300 flex flex-col justify-between group overflow-hidden flex-1 cursor-pointer`}
+                  onMouseEnter={() => {
+                    setHoveredPid(biddo.id);
+                    playClickSound('hover');
+                  }}
+                  onMouseLeave={() => setHoveredPid(null)}
+                  onClick={() => handleOpenDetail(biddo)}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-[8px] text-[#8A9BC4] uppercase tracking-wider font-mono">BENTO_SLOT [2:2]</span>
+                      {renderStatus(biddo.status)}
+                    </div>
+
+                    <div className="space-y-1 text-left">
+                      <span className="block text-[9.5px] text-emerald-400 font-mono leading-none uppercase tracking-wide font-bold">{biddo.tag}</span>
+                      <h3 className="text-lg md:text-xl font-display font-black text-white uppercase group-hover:text-[#39FF14] transition-colors pt-1">
+                        {biddo.title}
+                      </h3>
+                      <p className="text-[10px] text-[#8A9BC4] leading-relaxed pt-1.5 font-normal">
+                        {biddo.subtitle}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-white/5 mt-4 space-y-4">
+                    <div className="flex flex-wrap gap-1">
+                      {biddo.tech.map((t, idx) => (
+                        <span key={idx} className="text-[8px] font-mono px-2 py-0.5 rounded bg-white/[0.02] border border-white/5 text-[#8A9BC4]">
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center justify-between font-mono text-[8px] text-[#8A9BC4]">
+                      <span>{biddo.meta}</span>
+                      <span className="text-white hover:text-[#39FF14] font-black group-hover:underline">SPEC_VIEW ▶</span>
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+            </div>
+
+          </div>
+        ) : null}
+
+        {/* PROJECTS CONTAINER */}
+        <div>
+          {/* Conditional Subtitle changes depending on searching state */}
+          <span className="block text-left font-mono text-[8.5px] uppercase text-slate-500 tracking-widest mb-4">
+            {isDefaultView ? '// STANDARD SYSTEM IMPLEMENTATIONS REGISTER' : '// ACTIVE SYSTEM QUERY DECK MATCHES'}
+          </span>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {(isDefaultView ? standardProjects : filteredProjects).map((p) => (
+              <div 
+                key={p.id}
+                className={`rounded-2xl p-5 bg-[#080D1F] border border-white/5 ${accentBorderHoverClass} hover:shadow-[0_0_15px_rgba(57,255,20,0.02)] transition-all duration-300 flex flex-col justify-between group text-left relative overflow-hidden cursor-pointer`}
+                onMouseEnter={() => {
+                  setHoveredPid(p.id);
+                  playClickSound('hover');
+                }}
+                onMouseLeave={() => setHoveredPid(null)}
+                onClick={() => handleOpenDetail(p)}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-6.5 h-6.5 rounded bg-white/[0.01] border border-white/5 flex items-center justify-center font-display font-black text-[#39FF14] text-[8.5px]">
+                      {p.logoText}
+                    </div>
+                    {renderStatus(p.status)}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <span className="block text-[8px] font-mono text-slate-400 font-bold uppercase tracking-wide">{p.tag}</span>
+                    <h4 className="text-sm font-display font-black text-white uppercase group-hover:text-[#39FF14] transition-colors">{p.title}</h4>
+                    <p className="text-[10.5px] text-[#8A9BC4] leading-relaxed font-normal">{p.subtitle}</p>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-white/5 mt-4 space-y-3">
+                  <div className="flex flex-wrap gap-1">
+                    {p.tech.map((t, idx) => (
+                      <span key={idx} className="text-[7.5px] font-mono px-1.5 py-0.5 rounded bg-white/[0.01] border border-white/5 text-[#8A9BC4]">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between font-mono text-[7.5px] text-[#8A9BC4]">
+                    <span>{p.meta}</span>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenDetail(p);
+                      }}
+                      className="text-white hover:text-[#39FF14] font-black hover:underline cursor-pointer"
+                    >
+                      INSPECT [▶]
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            ))}
+
+            {/* Empty Matches state for query */}
+            {!isDefaultView && filteredProjects.length === 0 && (
+              <div className="col-span-full border border-dashed border-white/10 rounded-2xl p-16 text-center font-mono space-y-3 bg-slate-950/20">
+                <ShieldAlert className="w-8 h-8 mx-auto text-amber-500 animate-pulse" />
+                <span className="block text-white uppercase text-[10px] font-bold tracking-widest">
+                  CRITICAL FAULT: NO INTERSECTING TRANSMISSION NODES
+                </span>
+                <p className="text-[9.5px] text-slate-500 max-w-sm mx-auto uppercase">
+                  No core projects currently match query "{searchQuery.toUpperCase()}" under the "{selectedTag.toUpperCase()}" scope configuration.
+                </p>
+                <button 
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedTag('all');
+                  }}
+                  className={`mt-2 inline-block text-[9px] uppercase font-black px-4 py-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 text-[#39FF14]`}
+                >
+                  DE-ALLOCATE QUERY FILTER
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+      </motion.div>
+
+      {/* FULL SPECS DETAIL DISPATCH MODAL */}
+      <ProjectDetailModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        project={selectedProject}
+        accentColor={accentColor}
+      />
+    </section>
+  );
+}
