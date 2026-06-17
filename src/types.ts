@@ -1,3 +1,5 @@
+export type AccentColor = 'green' | 'cyan' | 'pink' | 'purple' | 'yellow';
+
 export interface Project {
   id: string;
   title: string;

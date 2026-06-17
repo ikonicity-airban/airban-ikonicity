@@ -1,17 +1,28 @@
 import { motion } from 'motion/react';
+import { getAccentHex, getAccentTextClass, getAccentBgClass } from '../utils';
 
 interface SectionDividerProps {
-  accentColor: 'green' | 'cyan';
+  accentColor: 'green' | 'cyan' | 'pink' | 'purple' | 'yellow';
   label: string;
   sourceSector?: string;
   targetSector?: string;
 }
 
 export default function SectionDivider({ accentColor, label, sourceSector, targetSector }: SectionDividerProps) {
-  const accentColorHex = accentColor === 'green' ? '#39FF14' : '#00D4FF';
-  const textAccentClass = accentColor === 'green' ? 'text-[#39FF14]' : 'text-[#00D4FF]';
-  const bgAccentClass = accentColor === 'green' ? 'bg-[#39FF14]' : 'bg-[#00D4FF]';
-  const borderAccentClass = accentColor === 'green' ? 'border-[#39FF14]/20' : 'border-[#00D4FF]/20';
+  const accentColorHex = getAccentHex(accentColor);
+  const textAccentClass = getAccentTextClass(accentColor);
+  const bgAccentClass = getAccentBgClass(accentColor);
+  const getBorderAccentClassWithOpacity20 = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'border-[#39FF14]/20';
+      case 'cyan': return 'border-[#00D4FF]/20';
+      case 'pink': return 'border-[#FF007F]/20';
+      case 'purple': return 'border-[#BD00FF]/20';
+      case 'yellow': return 'border-[#FFE600]/20';
+      default: return 'border-[#39FF14]/20';
+    }
+  };
+  const borderAccentClass = getBorderAccentClassWithOpacity20(accentColor);
 
   return (
     <div className="w-full relative py-8 overflow-hidden select-none" id={`divider-${label.toLowerCase().replace(/\s+/g, '-')}`}>

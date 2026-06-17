@@ -45,15 +45,17 @@ import {
   orderBy 
 } from 'firebase/firestore';
 import { signInWithPopup, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { portfolioData } from '../data';
+import { getAccentHex, getAccentTextClass, getAccentBgClass } from '../utils';
 
 interface AdminSectionProps {
-  accentColor: 'green' | 'cyan';
+  accentColor: 'green' | 'cyan' | 'pink' | 'purple' | 'yellow';
   onClose: () => void;
 }
 
 export default function AdminSection({ accentColor, onClose }: AdminSectionProps) {
   const isGreen = accentColor === 'green';
-  const primaryAccent = isGreen ? '#39FF14' : '#00D4FF';
+  const primaryAccent = getAccentHex(accentColor);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [email, setEmail] = useState('');
   const [passphrase, setPassphrase] = useState('');
@@ -370,6 +372,46 @@ export default function AdminSection({ accentColor, onClose }: AdminSectionProps
     }
   };
 
+  const handleResetProjectsToDefault = async () => {
+    if (!confirm('Warning: This will clear ALL existing database projects and re-populate them from the default codebase source (data.ts). Do you wish to proceed?')) return;
+    try {
+      addTxLog('INITIATING DATABASE PROJECTS RESET...');
+      // Retrieve live snapshot of current projects in order to safely delete them
+      const snapshot = await getDocs(collection(db, 'projects'));
+      for (const d of snapshot.docs) {
+        await deleteDoc(doc(db, 'projects', d.id));
+      }
+      addTxLog('ALL LIVE PROJECT RECORDS PURGED');
+      
+      let index = 0;
+      for (const p of portfolioData.projects) {
+        const docId = p.id;
+        const docData = {
+          title: p.title,
+          slug: p.id,
+          imageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80',
+          status: p.status,
+          liveUrl: p.links?.[0]?.url || '#',
+          repoUrl: p.links?.[1]?.url || '#',
+          description: p.subtitle,
+          longDesc: p.description,
+          role: p.tag,
+          year: '2024',
+          stack: p.tech,
+          featured: p.id === 'geek-creations' || p.id === 'icatholic-igbo' || p.id === 'biddo',
+          isVisible: true,
+          order: index++
+        };
+        await setDoc(doc(db, 'projects', docId), docData);
+        addTxLog(`RESTORED: ${p.title.toUpperCase()}`);
+      }
+      addTxLog('DATABASE PROJECTS SYNCHRONIZED SEAMLESSLY');
+    } catch (err: any) {
+      console.error(err);
+      addTxLog(`ERROR ALIGNING PROJECTS: ${err.message}`);
+    }
+  };
+
   const toggleProjectFeatured = async (p: any) => {
     try {
       await updateDoc(doc(db, 'projects', p.id), {
@@ -532,11 +574,44 @@ export default function AdminSection({ accentColor, onClose }: AdminSectionProps
   };
 
   // Color dynamic helpers
-  const focusBorder = accentColor === 'green' ? 'focus:border-[#39FF14]' : 'focus:border-[#00D4FF]';
-  const textAccent = accentColor === 'green' ? 'text-[#39FF14]' : 'text-[#00D4FF]';
-  const bgAccent = accentColor === 'green' ? 'bg-[#39FF14]' : 'bg-[#00D4FF]';
-  const borderAccent = accentColor === 'green' ? 'border-[#39FF14]/40' : 'border-[#00D4FF]/40';
-  const glowShadow = accentColor === 'green' ? 'shadow-[0_0_15px_rgba(57,255,20,0.2)]' : 'shadow-[0_0_15px_rgba(0,212,255,0.2)]';
+  const getFocusBorder = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'focus:border-[#39FF14]';
+      case 'cyan': return 'focus:border-[#00D4FF]';
+      case 'pink': return 'focus:border-[#FF007F]';
+      case 'purple': return 'focus:border-[#BD00FF]';
+      case 'yellow': return 'focus:border-[#FFE600]';
+      default: return 'focus:border-[#39FF14]';
+    }
+  };
+
+  const getBorderAccent = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'border-[#39FF14]/40';
+      case 'cyan': return 'border-[#00D4FF]/40';
+      case 'pink': return 'border-[#FF007F]/40';
+      case 'purple': return 'border-[#BD00FF]/40';
+      case 'yellow': return 'border-[#FFE600]/40';
+      default: return 'border-[#39FF14]/40';
+    }
+  };
+
+  const getGlowShadow = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'shadow-[0_0_15px_rgba(57,255,20,0.2)]';
+      case 'cyan': return 'shadow-[0_0_15px_rgba(0,212,255,0.2)]';
+      case 'pink': return 'shadow-[0_0_15px_rgba(255,0,127,0.2)]';
+      case 'purple': return 'shadow-[0_0_15px_rgba(189,0,255,0.2)]';
+      case 'yellow': return 'shadow-[0_0_15px_rgba(255,230,0,0.2)]';
+      default: return 'shadow-[0_0_15px_rgba(57,255,20,0.2)]';
+    }
+  };
+
+  const focusBorder = getFocusBorder(accentColor);
+  const textAccent = getAccentTextClass(accentColor);
+  const bgAccent = getAccentBgClass(accentColor);
+  const borderAccent = getBorderAccent(accentColor);
+  const glowShadow = getGlowShadow(accentColor);
 
   // Compute analytics aggregation values
   const totalViews = analytics.length;
@@ -822,13 +897,22 @@ export default function AdminSection({ accentColor, onClose }: AdminSectionProps
                     </div>
 
                     {activeTab === 'projects' && (
-                      <button 
-                        onClick={openProjectCreate}
-                        className={`py-1.5 px-4 rounded border font-mono font-black text-[9px] uppercase tracking-wider cursor-pointer transition-all hover:brightness-110 flex items-center gap-1.5 ${bgAccent} text-[#050816] ${glowShadow}`}
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>DEPLOY NEW PROJECT</span>
-                      </button>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <button 
+                          onClick={handleResetProjectsToDefault}
+                          className="py-1.5 px-3 rounded border border-red-500/30 bg-red-950/20 text-red-400 font-mono font-black text-[9px] uppercase tracking-wider cursor-pointer hover:bg-red-900/30 transition-all flex items-center gap-1.5 shadow-[0_0_8px_rgba(239,68,68,0.1)]"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                          <span>ALIGN LIVE WITH DATA.TS</span>
+                        </button>
+                        <button 
+                          onClick={openProjectCreate}
+                          className={`py-1.5 px-4 rounded border font-mono font-black text-[9px] uppercase tracking-wider cursor-pointer transition-all hover:brightness-110 flex items-center gap-1.5 ${bgAccent} text-[#050816] ${glowShadow}`}
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>DEPLOY NEW PROJECT</span>
+                        </button>
+                      </div>
                     )}
 
                     {activeTab === 'testimonials' && (

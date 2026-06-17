@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { getAccentHex, getAccentTextClass, getAccentBgClass, getAccentRgba } from '../utils';
 
 interface Testimonial {
   id: string;
@@ -43,7 +44,7 @@ const defaultTestimonialsData: Testimonial[] = [
 ];
 
 interface TestimonialsSectionProps {
-  accentColor: 'green' | 'cyan';
+  accentColor: 'green' | 'cyan' | 'pink' | 'purple' | 'yellow';
   dbTestimonials?: any[];
 }
 
@@ -110,10 +111,87 @@ export default function TestimonialsSection({ accentColor, dbTestimonials }: Tes
     touchStartX.current = null;
   };
 
-  const textAccentClass = accentColor === 'green' ? 'text-[#39FF14]' : 'text-[#00D4FF]';
+  const textAccentClass = getAccentTextClass(accentColor);
+  const accentHex = getAccentHex(accentColor);
+
+  const getBorderActiveCard = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'border-[#39FF14]/40 shadow-[0_8px_40px_rgba(57,255,20,0.15)] z-20';
+      case 'cyan': return 'border-[#00D4FF]/40 shadow-[0_8px_40px_rgba(0,212,255,0.15)] z-20';
+      case 'pink': return 'border-[#FF007F]/40 shadow-[0_8px_40px_rgba(255,0,127,0.15)] z-20';
+      case 'purple': return 'border-[#BD00FF]/40 shadow-[0_8px_40px_rgba(189,0,255,0.15)] z-20';
+      case 'yellow': return 'border-[#FFE600]/40 shadow-[0_8px_40px_rgba(255,230,0,0.15)] z-20';
+      default: return 'border-[#39FF14]/40 shadow-[0_8px_40px_rgba(57,255,20,0.15)] z-20';
+    }
+  };
+
+  const getBorderHoverCard = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'hover:border-[#39FF14]/15';
+      case 'cyan': return 'hover:border-[#00D4FF]/15';
+      case 'pink': return 'hover:border-[#FF007F]/15';
+      case 'purple': return 'hover:border-[#BD00FF]/15';
+      case 'yellow': return 'hover:border-[#FFE600]/15';
+      default: return 'hover:border-[#39FF14]/15';
+    }
+  };
+
+  const getArrowBtnHover = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'hover:border-[#39FF14] hover:text-[#39FF14]';
+      case 'cyan': return 'hover:border-[#00D4FF] hover:text-[#00D4FF]';
+      case 'pink': return 'hover:border-[#FF007F] hover:text-[#FF007F]';
+      case 'purple': return 'hover:border-[#BD00FF] hover:text-[#BD00FF]';
+      case 'yellow': return 'hover:border-[#FFE600] hover:text-[#FFE600]';
+      default: return 'hover:border-[#39FF14] hover:text-[#39FF14]';
+    }
+  };
+
+  const getDividerBg = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'bg-[#39FF14]/15';
+      case 'cyan': return 'bg-[#00D4FF]/15';
+      case 'pink': return 'bg-[#FF007F]/15';
+      case 'purple': return 'bg-[#BD00FF]/15';
+      case 'yellow': return 'bg-[#FFE600]/15';
+      default: return 'bg-[#39FF14]/15';
+    }
+  };
+
+  const getAvatarBorder = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'bg-[#39FF14]/10 border-[#39FF14]/20';
+      case 'cyan': return 'bg-[#00D4FF]/10 border-[#00D4FF]/20';
+      case 'pink': return 'bg-[#FF007F]/10 border-[#FF007F]/20';
+      case 'purple': return 'bg-[#BD00FF]/10 border-[#BD00FF]/20';
+      case 'yellow': return 'bg-[#FFE600]/10 border-[#FFE600]/20';
+      default: return 'bg-[#39FF14]/10 border-[#39FF14]/20';
+    }
+  };
+
+  const getDotIndicatorClass = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'bg-[#39FF14] shadow-[0_0_8px_#39FF14]';
+      case 'cyan': return 'bg-[#00D4FF] shadow-[0_0_8px_#00D4FF]';
+      case 'pink': return 'bg-[#FF007F] shadow-[0_0_8px_#FF007F]';
+      case 'purple': return 'bg-[#BD00FF] shadow-[0_0_8px_#BD00FF]';
+      case 'yellow': return 'bg-[#FFE600] shadow-[0_0_8px_#FFE600]';
+      default: return 'bg-[#39FF14] shadow-[0_0_8px_#39FF14]';
+    }
+  };
+
+  const getMobileCardBorder = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'border-[#39FF14]/25';
+      case 'cyan': return 'border-[#00D4FF]/25';
+      case 'pink': return 'border-[#FF007F]/25';
+      case 'purple': return 'border-[#BD00FF]/25';
+      case 'yellow': return 'border-[#FFE600]/25';
+      default: return 'border-[#39FF14]/25';
+    }
+  };
 
   // Get ordered indices so that active card is in middle on desktop
-  // Left: (active - 1), Center: active, Right: (active + 1)
   const getVisibleOrder = () => {
     const len = testimonialsToUse.length;
     const leftIdx = (activeIndex - 1 + len) % len;
@@ -135,9 +213,7 @@ export default function TestimonialsSection({ accentColor, dbTestimonials }: Tes
       <div 
         className="absolute left-0 bottom-0 w-[50vw] aspect-square rounded-full pointer-events-none z-0 filter blur-[140px] opacity-[0.03]"
         style={{
-          background: accentColor === 'green' 
-            ? 'radial-gradient(circle, rgba(57, 255, 20, 0.4) 0%, transparent 70%)' 
-            : 'radial-gradient(circle, rgba(0, 212, 255, 0.4) 0%, transparent 70%)',
+          background: `radial-gradient(circle, ${getAccentRgba(accentColor, 0.4)} 0%, transparent 70%)`,
         }}
       />
 
@@ -165,7 +241,7 @@ export default function TestimonialsSection({ accentColor, dbTestimonials }: Tes
             {/* Prev Trigger Button */}
             <button 
               onClick={prevSlide}
-              className="w-10 h-10 rounded-full border border-[#1A2544] flex items-center justify-center text-[#8A9BC4] hover:border-[#39FF14] hover:text-[#39FF14] transition-all cursor-pointer shrink-0"
+              className={`w-10 h-10 rounded-full border border-[#1A2544] flex items-center justify-center text-[#8A9BC4] ${getArrowBtnHover(accentColor)} transition-all cursor-pointer shrink-0`}
               aria-label="Previous testimonial"
             >
               <ChevronLeft className="w-5 h-5" />
@@ -190,12 +266,12 @@ export default function TestimonialsSection({ accentColor, dbTestimonials }: Tes
                     transition={{ type: "spring", stiffness: 300, damping: 25 }}
                     className={`w-[380px] shrink-0 bg-[#080D1F] rounded-xl p-8 relative flex flex-col justify-between text-left h-[340px] border transition-all duration-200 ${
                       isCenter 
-                        ? 'border-[#39FF14]/40 shadow-[0_8px_40px_rgba(0,0,0,0.6)] z-20' 
-                        : 'border-[#1A2544] hover:border-[#39FF14]/15 z-10 opacity-70'
+                        ? `${getBorderActiveCard(accentColor)}` 
+                        : `border-[#1A2544] ${getBorderHoverCard(accentColor)} z-10 opacity-70`
                     }`}
                   >
                     {/* Big quotation mark in background */}
-                    <span className="absolute top-4 left-6 font-display text-[5.5rem] leading-none opacity-15 select-none pointer-events-none text-[#39FF14]">
+                    <span className="absolute top-4 left-6 font-display text-[5.5rem] leading-none opacity-15 select-none pointer-events-none" style={{ color: accentHex }}>
                       "
                     </span>
 
@@ -208,12 +284,12 @@ export default function TestimonialsSection({ accentColor, dbTestimonials }: Tes
 
                     {/* Bottom identity stack with Divider */}
                     <div className="space-y-4">
-                      <div className="h-[1px] bg-[#39FF14]/15 w-full" />
+                      <div className={`h-[1px] w-full ${getDividerBg(accentColor)}`} />
                       
                       <div className="flex items-center gap-3.5">
                         {/* Circle Avatar placeholder */}
-                        <div className="w-10 h-10 rounded-full bg-[#39FF14]/10 border border-[#39FF14]/20 flex items-center justify-center shrink-0">
-                          <span className="font-accent font-black text-xs text-[#39FF14] uppercase">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border ${getAvatarBorder(accentColor)}`}>
+                          <span className="font-accent font-black text-xs uppercase" style={{ color: accentHex }}>
                             {item.initials}
                           </span>
                         </div>
@@ -226,7 +302,7 @@ export default function TestimonialsSection({ accentColor, dbTestimonials }: Tes
                           <p className="font-mono text-[#8A9BC4] text-[11px] leading-tight mt-0.5 truncate">
                             {item.title}
                           </p>
-                          <p className="font-mono text-[#39FF14] text-[11px] leading-none mt-1 font-semibold tracking-wider uppercase">
+                          <p className="font-mono text-[11px] leading-none mt-1 font-semibold tracking-wider uppercase" style={{ color: accentHex }}>
                             {item.company}
                           </p>
                         </div>
@@ -240,7 +316,7 @@ export default function TestimonialsSection({ accentColor, dbTestimonials }: Tes
             {/* Next Trigger Button */}
             <button 
               onClick={nextSlide}
-              className="w-10 h-10 rounded-full border border-[#1A2544] flex items-center justify-center text-[#8A9BC4] hover:border-[#39FF14] hover:text-[#39FF14] transition-all cursor-pointer shrink-0"
+              className={`w-10 h-10 rounded-full border border-[#1A2544] flex items-center justify-center text-[#8A9BC4] ${getArrowBtnHover(accentColor)} transition-all cursor-pointer shrink-0`}
               aria-label="Next testimonial"
             >
               <ChevronRight className="w-5 h-5" />
@@ -255,7 +331,7 @@ export default function TestimonialsSection({ accentColor, dbTestimonials }: Tes
                 onClick={() => setActiveIndex(idx)}
                 className={`w-2 h-2 transition-all duration-200 cursor-pointer ${
                   idx === activeIndex 
-                    ? 'bg-[#39FF14] shadow-[0_0_8px_#39FF14]' 
+                    ? getDotIndicatorClass(accentColor) 
                     : 'bg-[#1A2544]'
                 }`}
                 style={{ borderRadius: '0px' }} // square dot
@@ -281,10 +357,10 @@ export default function TestimonialsSection({ accentColor, dbTestimonials }: Tes
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.25 }}
-                  className="w-full bg-[#080D1F] border border-[#39FF14]/25 rounded-xl p-8 relative flex flex-col justify-between text-left h-[350px]"
+                  className={`w-full bg-[#080D1F] border rounded-xl p-8 relative flex flex-col justify-between text-left h-[350px] ${getMobileCardBorder(accentColor)}`}
                 >
                   {/* Big quotation mark */}
-                  <span className="absolute top-4 left-6 font-display text-[4.5rem] leading-none opacity-15 select-none pointer-events-none text-[#39FF14]">
+                  <span className="absolute top-4 left-6 font-display text-[4.5rem] leading-none opacity-15 select-none pointer-events-none" style={{ color: accentHex }}>
                     "
                   </span>
 
@@ -297,12 +373,12 @@ export default function TestimonialsSection({ accentColor, dbTestimonials }: Tes
 
                   {/* Bottom identity stack */}
                   <div className="space-y-4">
-                    <div className="h-[1px] bg-[#39FF14]/15 w-full" />
+                    <div className={`h-[1px] w-full ${getDividerBg(accentColor)}`} />
                     
                     <div className="flex items-center gap-3.5">
                       {/* Circle Avatar */}
-                      <div className="w-10 h-10 rounded-full bg-[#39FF14]/10 border border-[#39FF14]/20 flex items-center justify-center shrink-0">
-                        <span className="font-accent font-black text-xs text-[#39FF14] uppercase">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border ${getAvatarBorder(accentColor)}`}>
+                        <span className="font-accent font-black text-xs uppercase" style={{ color: accentHex }}>
                           {testimonialsToUse[activeIndex].initials}
                         </span>
                       </div>
@@ -315,7 +391,7 @@ export default function TestimonialsSection({ accentColor, dbTestimonials }: Tes
                         <p className="font-mono text-[#8A9BC4] text-[11px] leading-tight mt-0.5 truncate">
                           {testimonialsToUse[activeIndex].title}
                         </p>
-                        <p className="font-mono text-[#39FF14] text-[10px] leading-none mt-1 font-semibold tracking-wider uppercase">
+                        <p className="font-mono text-[10px] leading-none mt-1 font-semibold tracking-wider uppercase" style={{ color: accentHex }}>
                           {testimonialsToUse[activeIndex].company}
                         </p>
                       </div>
@@ -339,7 +415,7 @@ export default function TestimonialsSection({ accentColor, dbTestimonials }: Tes
                 onClick={() => setActiveIndex(idx)}
                 className={`w-2 h-2 transition-all duration-200 cursor-pointer ${
                   idx === activeIndex 
-                    ? 'bg-[#39FF14] shadow-[0_0_8px_#39FF14]' 
+                    ? getDotIndicatorClass(accentColor) 
                     : 'bg-[#1A2544]'
                 }`}
                 style={{ borderRadius: '0px' }} // square dot

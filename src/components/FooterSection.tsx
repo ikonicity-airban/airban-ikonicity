@@ -2,18 +2,41 @@ import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronUp, Github, Linkedin, Twitter, MessageSquare, Compass, ArrowUpRight, Sparkles, Command, Globe, Activity, Cpu } from 'lucide-react';
 import Logo from './Logo';
-import { playClickSound } from '../utils';
+import { playClickSound, getAccentHex, getAccentTextClass, getAccentBgClass, getAccentBorderClass } from '../utils';
 
 interface FooterSectionProps {
-  accentColor: 'green' | 'cyan';
+  accentColor: 'green' | 'cyan' | 'pink' | 'purple' | 'yellow';
   onOpenAdmin?: () => void;
   availabilityStatus?: string;
 }
 
 export default function FooterSection({ accentColor, onOpenAdmin, availabilityStatus }: FooterSectionProps) {
   const isGreen = accentColor === 'green';
-  const textAccentClass = isGreen ? 'text-[#39FF14]' : 'text-[#00D4FF]';
-  const borderAccentClass = isGreen ? 'border-[#39FF14]' : 'border-[#00D4FF]';
+  const textAccentClass = getAccentTextClass(accentColor);
+  const borderAccentClass = getAccentBorderClass(accentColor);
+  const accentHex = getAccentHex(accentColor);
+
+  const getOpacityRgba = (color: typeof accentColor, opacity: number) => {
+    switch (color) {
+      case 'green': return `rgba(57, 255, 20, ${opacity})`;
+      case 'cyan': return `rgba(0, 212, 255, ${opacity})`;
+      case 'pink': return `rgba(255, 0, 127, ${opacity})`;
+      case 'purple': return `rgba(189, 0, 255, ${opacity})`;
+      case 'yellow': return `rgba(255, 230, 0, ${opacity})`;
+      default: return `rgba(57, 255, 20, ${opacity})`;
+    }
+  };
+
+  const getBadgeClasses = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'bg-[#39FF14]/5 border-[#39FF14]/15 text-[#39FF14]';
+      case 'cyan': return 'bg-[#00D4FF]/5 border-[#00D4FF]/15 text-[#00D4FF]';
+      case 'pink': return 'bg-[#FF007F]/5 border-[#FF007F]/15 text-[#FF007F]';
+      case 'purple': return 'bg-[#BD00FF]/5 border-[#BD00FF]/15 text-[#BD00FF]';
+      case 'yellow': return 'bg-[#FFE600]/5 border-[#FFE600]/15 text-[#FFE600]';
+      default: return 'bg-[#39FF14]/5 border-[#39FF14]/15 text-[#39FF14]';
+    }
+  };
 
   // Back to top function
   const scrollToTop = () => {
@@ -21,73 +44,66 @@ export default function FooterSection({ accentColor, onOpenAdmin, availabilitySt
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Konami Code sequence state
-  const konamiCode = [
-    'ArrowUp', 'ArrowUp',
-    'ArrowDown', 'ArrowDown',
-    'ArrowLeft', 'ArrowRight',
-    'ArrowLeft', 'ArrowRight',
-    'b', 'a'
-  ];
-  const [keyHistory, setKeyHistory] = useState<string[]>([]);
-  const [easterEggActive, setEasterEggActive] = useState(false);
-  const [terminalLines, setTerminalLines] = useState<string[]>([]);
-  const terminalEndRef = useRef<HTMLDivElement>(null);
+  // Easter egg: Konami code check
+  const [konamiProgress, setKonamiProgress] = useState<number>(0);
+  const [easterEggActive, setEasterEggActive] = useState<boolean>(false);
+  const konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 
-  // Monitor keyboard key strokes for Konami Code
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const key = e.key;
-      // Convert B/A to lowercase for easy match
-      const keyToPush = (key === 'b' || key === 'B') ? 'b' : (key === 'a' || key === 'A') ? 'a' : key;
-      
-      setKeyHistory((prev) => {
-        const updated = [...prev, keyToPush].slice(-konamiCode.length);
-        
-        // Match Konami Code
-        const matches = updated.every((val, index) => val === konamiCode[index]);
-        if (matches) {
-          triggerEasterEgg();
-          return [];
+      const expected = konamiSequence[konamiProgress];
+      if (e.key === expected) {
+        const next = konamiProgress + 1;
+        setKonamiProgress(next);
+        if (next === konamiSequence.length) {
+          setEasterEggActive(true);
+          playClickSound('success');
+          setKonamiProgress(0);
         }
-        return updated;
-      });
-
-      // Escape key to close terminal
-      if (key === 'Escape') {
-        setEasterEggActive(false);
+      } else {
+        setKonamiProgress(e.key === 'ArrowUp' ? 1 : 0);
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [konamiProgress]);
 
-  const triggerEasterEgg = () => {
-    playClickSound('success');
-    setEasterEggActive(true);
-    setTerminalLines([
-      "> COUPLING SYSTEM DEEP-LINK TRANSMISSION...",
-      "> LOADING KERNEL INTERRUPT PORT 3000...",
-      "> DECRYPTING METAMASK WEB3 PACKETS..."
-    ]);
+  // Command prompt emulator lines
+  const [terminalLines, setTerminalLines] = useState<string[]>([
+    'IKONICITY CORE PORTFOLIO DECK (V1.0.0)',
+    'Type "help" to list protocols and access nodes.'
+  ]);
+  const [currentInput, setCurrentInput] = useState<string>('');
+  const terminalEndRef = useRef<HTMLDivElement>(null);
 
-    setTimeout(() => {
-      setTerminalLines(prev => [...prev, "> SYSTEM ACCESS GRANTED"]);
-    }, 600);
+  const handleCommandSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentInput.trim()) return;
 
-    setTimeout(() => {
-      setTerminalLines(prev => [...prev, "> Welcome back, Engineer Eban Godwin."]);
-    }, 1300);
+    const trimmed = currentInput.trim().toLowerCase();
+    let reply = `Command not recognized: "${trimmed}". Type "help" or "ls" for lists.`;
 
-    setTimeout(() => {
-      setTerminalLines(prev => [...prev, "> All systems operational and fully optimized."]);
-    }, 2000);
+    if (trimmed === 'help') {
+      reply = 'Available protocols: "about", "skills", "projects", "contact", "clear", "matrix".';
+    } else if (trimmed === 'about') {
+      reply = 'Eban Godwin Ikoni - Electronics & Computer Engineer specialized in full-stack web and systems architectures.';
+    } else if (trimmed === 'skills') {
+      reply = 'TypeScript, React, Node.js, Express, Hono, C#, Python, Solidity, Web3 integration.';
+    } else if (trimmed === 'projects') {
+      reply = 'Type "projects list" inside sub-screens, or inspect standard Projects deck.';
+    } else if (trimmed === 'contact') {
+      reply = 'Email routing link: ikonicityairban@gmail.com.';
+    } else if (trimmed === 'clear') {
+      setTerminalLines([]);
+      setCurrentInput('');
+      return;
+    } else if (trimmed === 'matrix') {
+      reply = 'Transmitting subnet coordinates... Matrix code overrides injected successfully.';
+    }
 
-    // Auto-close after 6 seconds
-    setTimeout(() => {
-      setEasterEggActive(false);
-    }, 7000);
+    setTerminalLines(prev => [...prev, `> ${currentInput}`, reply]);
+    setCurrentInput('');
+    playClickSound('synth');
   };
 
   useEffect(() => {
@@ -100,7 +116,7 @@ export default function FooterSection({ accentColor, onOpenAdmin, availabilitySt
     <footer 
       className="relative w-full bg-[#050816] mt-16 border-t overflow-hidden transition-all duration-300"
       style={{
-        borderColor: isGreen ? 'rgba(57, 255, 20, 0.12)' : 'rgba(0, 212, 255, 0.12)'
+        borderColor: getOpacityRgba(accentColor, 0.12)
       }}
     >
       
@@ -108,8 +124,8 @@ export default function FooterSection({ accentColor, onOpenAdmin, availabilitySt
       <div 
         className="absolute top-0 left-0 right-0 h-[2px] opacity-70 pointer-events-none z-10 transition-all duration-300" 
         style={{
-          background: `linear-gradient(to right, transparent 5%, ${isGreen ? '#39FF14' : '#00D4FF'} 50%, transparent 95%)`,
-          boxShadow: isGreen ? '0 0 15px #39FF14' : '0 0 15px #00D4FF'
+          background: `linear-gradient(to right, transparent 5%, ${accentHex} 50%, transparent 95%)`,
+          boxShadow: `0 0 15px ${accentHex}`
         }}
       />
 
@@ -117,7 +133,7 @@ export default function FooterSection({ accentColor, onOpenAdmin, availabilitySt
       <div 
         className="absolute bottom-[-100px] left-1/2 -translate-x-1/2 w-[500px] h-[250px] rounded-full blur-[120px] pointer-events-none opacity-20 transition-all duration-500"
         style={{
-          background: isGreen ? '#39FF14' : '#00D4FF'
+          background: accentHex
         }}
       />
 
@@ -151,72 +167,48 @@ export default function FooterSection({ accentColor, onOpenAdmin, availabilitySt
             <div className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg w-fit border transition-all ${
               availabilityStatus === 'busy' 
                 ? 'bg-amber-400/5 border-amber-400/15 text-amber-400' 
-                : (isGreen ? 'bg-[#39FF14]/5 border-[#39FF14]/15 text-[#39FF14]' : 'bg-[#00D4FF]/5 border-[#00D4FF]/15 text-[#00D4FF]')
+                : getBadgeClasses(accentColor)
             }`}>
               <div className="relative flex h-1.5 w-1.5 shrink-0">
                 <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                  availabilityStatus === 'busy' ? 'bg-amber-400' : (isGreen ? 'bg-[#39FF14]' : 'bg-[#00D4FF]')
+                  availabilityStatus === 'busy' ? 'bg-amber-400' : getAccentBgClass(accentColor)
                 }`}></span>
                 <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${
-                  availabilityStatus === 'busy' ? 'bg-amber-400' : (isGreen ? 'bg-[#39FF14]' : 'bg-[#00D4FF]')
+                  availabilityStatus === 'busy' ? 'bg-amber-400' : getAccentBgClass(accentColor)
                 }`}></span>
               </div>
               <span className="text-[9px] font-mono font-bold uppercase tracking-widest">
                 {availabilityStatus === 'busy' ? 'BUSY ON CORE BINDINGS' : 'AVAILABLE FOR RECRUIT'}
               </span>
             </div>
-
-            {/* Social icons row */}
-            <div className="flex items-center gap-2.5 pt-2">
-              {[
-                { icon: <Github className="w-3.5 h-3.5" />, url: "https://github.com/ikonicity-airban", label: "Github" },
-                { icon: <Linkedin className="w-3.5 h-3.5" />, url: "https://linkedin.com/in/ebangodwinikoni", label: "Linkedin" },
-                { icon: <Twitter className="w-3.5 h-3.5" />, url: "https://x.com/ikonicityairban", label: "X" },
-                { icon: <Compass className="w-3.5 h-3.5" />, url: "https://t.me/ikonicity_airban", label: "Telegram" },
-                { icon: <MessageSquare className="w-3.5 h-3.5" />, url: "https://discord.com/users/ikonicity", label: "Discord" }
-              ].map((item, idx) => (
-                <motion.a
-                  whileHover={{ scale: 1.15, y: -2 }}
-                  whileTap={{ scale: 0.85 }}
-                  onClick={() => playClickSound('click')}
-                  key={idx}
-                  href={item.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-7.5 h-7.5 rounded-lg border border-white/5 bg-white/[0.01] flex items-center justify-center text-[#8A9BC4] hover:bg-white/5 transition-colors"
-                  title={item.label}
-                >
-                  <span className="hover:text-white transition-colors">
-                    {item.icon}
-                  </span>
-                </motion.a>
-              ))}
-            </div>
           </div>
 
-          {/* COLUMN 2: INDEXED SYSTEMS */}
+          {/* COLUMN 2: INTERNAL LINKS */}
           <div className="space-y-4 bg-white/[0.01] border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors relative group/card">
             <div className="absolute top-3 right-4 font-mono text-[7px] text-[#4A5A80] tracking-widest uppercase">
-              INDEX // CARD_02
+              SECT // CARD_02
             </div>
 
-            <span className="block font-mono text-[9px] tracking-widest text-white font-extrabold uppercase flex items-center gap-1.5">
-              <Command className={`w-3.5 h-3.5 ${textAccentClass}`} />
-              CORE LINKS
+            <span className="block font-mono text-[9px] tracking-widest font-bold uppercase" style={{ color: accentHex }}>
+              &gt;_ DECK COMPASS
             </span>
             <ul className="space-y-2.5 font-accent text-xs font-semibold text-[#8A9BC4]" style={{ fontFamily: "'Syne', sans-serif" }}>
-              {['Home', 'About', 'Projects', 'Services', 'Experience', 'Contact'].map((link) => (
-                <li key={link}>
+              {[
+                { name: 'Cockpit Deck', href: '#home' },
+                { name: 'Core Biography', href: '#about' },
+                { name: 'Weaponry / Skills', href: '#skills' },
+                { name: 'Systems Registry', href: '#projects' },
+                { name: 'Work Records', href: '#experience' }
+              ].map((link, idx) => (
+                <li key={idx}>
                   <motion.a 
-                    whileHover={{ x: 3, scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                      playClickSound('click');
-                    }}
-                    href={`#${link.toLowerCase()}`} 
-                    className="hover:text-white transition-all flex items-center gap-2 py-0.5 text-[#8A9BC4]"
+                    whileHover={{ x: 4, color: '#FFFFFF' }}
+                    onClick={() => playClickSound('hover')}
+                    href={link.href} 
+                    className="flex items-center gap-1.5 hover:text-white transition-colors duration-200"
                   >
-                    <span>{link}</span>
+                    <span>{link.name}</span>
+                    <ArrowUpRight className="w-3 h-3 opacity-30" />
                   </motion.a>
                 </li>
               ))}
@@ -229,7 +221,7 @@ export default function FooterSection({ accentColor, onOpenAdmin, availabilitySt
               CASE // CARD_03
             </div>
 
-            <span className="block font-mono text-[9px] tracking-widest text-[#39FF14] font-bold uppercase" style={{ color: isGreen ? '#39FF14' : '#00D4FF' }}>
+            <span className="block font-mono text-[9px] tracking-widest font-bold uppercase" style={{ color: accentHex }}>
               &gt;_ SELECTED WORK
             </span>
             <ul className="space-y-2.5 font-accent text-xs font-semibold text-[#8A9BC4]" style={{ fontFamily: "'Syne', sans-serif" }}>
@@ -238,111 +230,97 @@ export default function FooterSection({ accentColor, onOpenAdmin, availabilitySt
                 { name: 'iCatholic Igbo App', id: 'icatholic' },
                 { name: 'Biddo Auctions Web3', id: 'biddo' },
                 { name: 'Oyadrop Automation', id: 'oyadrop' },
-                { name: 'EB Pathway Engine', id: 'pathway' },
-                { name: 'SOFE Enterprise', id: 'sofe' }
-              ].map((proj) => (
-                <li key={proj.id} className="group/item">
+                { name: 'Giga Agent WhatsApp', id: 'whatsapp' }
+              ].map((link, idx) => (
+                <li key={idx}>
                   <motion.a 
-                    whileHover={{ x: 3 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                      playClickSound('click');
-                    }}
+                    whileHover={{ x: 4, color: '#FFFFFF' }}
+                    onClick={() => playClickSound('hover')}
                     href="#projects" 
-                    className="hover:text-white transition-all flex items-center justify-between py-0.5 text-[#8A9BC4]"
+                    className="flex items-center gap-1.5 hover:text-white transition-colors duration-200"
                   >
-                    <span className="truncate">{proj.name}</span>
-                    <ArrowUpRight className="w-3 h-3 text-[#4A5A80] group-hover/item:text-white transition-all transform group-hover/item:translate-x-0.5 group-hover/item:-translate-y-0.5" />
+                    <span>{link.name}</span>
+                    <ArrowUpRight className="w-3 h-3 opacity-30" />
                   </motion.a>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* COLUMN 4: COMMUNICATIONS PORTAL */}
-          <div className="space-y-5 bg-white/[0.01] border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors relative group/card">
+          {/* COLUMN 4: TRANSMIT PULL */}
+          <div className="space-y-4 bg-white/[0.01] border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors relative group/card">
             <div className="absolute top-3 right-4 font-mono text-[7px] text-[#4A5A80] tracking-widest uppercase">
               COMMS // CARD_04
             </div>
 
-            <span className="block font-mono text-[9px] tracking-widest text-white font-extrabold uppercase flex items-center gap-1.5">
-              <Globe className={`w-3.5 h-3.5 ${textAccentClass}`} />
-              COMMS RELAY
+            <span className="block font-mono text-[9px] tracking-widest font-bold uppercase" style={{ color: accentHex }}>
+              &gt;_ SECURE RELAY
             </span>
-            <div className="space-y-3.5 font-mono text-[10.5px] text-[#8A9BC4]">
-              <div>
-                <span className="block text-[7.5px] uppercase tracking-wider text-[#4A5A80]">EMAIL CHANNEL</span>
-                <a href="mailto:ikonicityairban@gmail.com" className="text-white hover:underline font-bold text-xs font-mono">ikonicityairban@gmail.com</a>
-              </div>
-              
-              <div>
-                <span className="block text-[7.5px] uppercase tracking-wider text-[#4A5A80]">TELE_COMMS CONNECTION</span>
-                <a href="tel:+2348169862852" className="text-white hover:underline font-bold text-xs font-mono">+234 816 986 2852</a>
-              </div>
+            
+            <p className="font-mono text-[10px] text-[#8A9BC4] leading-relaxed">
+              Inquire regarding bespoke system developments, enterprise automations, or technical leadership.
+            </p>
 
-              <div>
-                <span className="block text-[7.5px] uppercase tracking-wider text-[#4A5A80]">COGNITIVE SECTOR</span>
-                <p className="text-slate-300 font-bold">Nsukka, Enugu State · Worldwide Remote</p>
-              </div>
-
-              <div className="pt-1.5">
-                <motion.a
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    playClickSound('success');
-                  }}
-                  href="#contact"
-                  className="w-full text-center py-2.5 border text-[10px] font-accent font-extrabold uppercase tracking-widest transition-all duration-300 block cursor-pointer rounded-lg px-2"
-                  style={{
-                    borderColor: isGreen ? 'rgba(57, 255, 20, 0.25)' : 'rgba(0, 212, 255, 0.25)',
-                    color: isGreen ? '#39FF14' : '#00D4FF',
-                    fontFamily: "'Syne', sans-serif"
-                  }}
-                >
-                  Relay New Project ↗
-                </motion.a>
-              </div>
+            <div className="space-y-2 pt-2">
+              <motion.a
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  playClickSound('success');
+                }}
+                href="#contact"
+                className="w-full text-center py-2.5 border text-[10px] font-accent font-extrabold uppercase tracking-widest transition-all duration-300 block cursor-pointer rounded-lg px-2"
+                style={{
+                  borderColor: getOpacityRgba(accentColor, 0.25),
+                  color: accentHex,
+                  fontFamily: "'Syne', sans-serif"
+                }}
+              >
+                Relay New Project ↗
+              </motion.a>
             </div>
           </div>
 
         </div>
 
-        {/* BOTTOM METADATA BAR */}
-        <div className="mt-16 pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-6 font-mono text-[10px] text-[#4A5A80]">
-          <div className="space-y-1 text-center sm:text-left">
-            <p className="text-white font-semibold">© {new Date().getFullYear()} Eban Godwin Ikoni. All rights preserved.</p>
-            <p className="flex items-center justify-center sm:justify-start gap-1 flex-wrap">
-              <span>Sleek engineering optimized for decentralized Web3 standards. Built with precision.</span>
-              {onOpenAdmin && (
-                <button 
-                  onClick={() => {
-                    playClickSound('click');
-                    onOpenAdmin();
-                  }} 
-                  className={`px-1 font-bold text-[9px] uppercase tracking-widest bg-transparent border-none p-0 inline-block cursor-pointer font-mono ${textAccentClass} hover:underline`}
-                  title="Secure administrator portal authentication gateway"
-                >
-                  [ DECK_AUTH ]
-                </button>
-              )}
-            </p>
+        {/* BOTTOM METADATA RAIL */}
+        <div className="mt-16 pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
+            <span className="font-mono text-[10px] text-[#4A5A80]">
+              © {new Date().getFullYear()} EBAN GODWIN IKONI.
+            </span>
+            <div className="hidden sm:block h-3 w-[1px] bg-white/5" />
+            <span className="font-mono text-[9px] text-[#4A5A80] uppercase tracking-widest">
+              SECURED DEPLOYMENT CODENAME: AIRBAN_OVEN
+            </span>
           </div>
 
-          {/* BACK TO TOP BUTTON AND TIP */}
           <div className="flex items-center gap-4">
-            <span className="text-[8px] text-[#CAD5EE]/20 uppercase tracking-[0.2em] font-bold hidden lg:inline">
-              [ PRESS UP-UP-DOWN-DOWN-LEFT-RIGHT-LEFT-RIGHT-B-A FOR EMULATORS ]
-            </span>
+            {/* System Admin Trigger */}
+            {onOpenAdmin && (
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                onClick={() => {
+                  playClickSound('success');
+                  onOpenAdmin();
+                }}
+                className="w-9 h-9 border border-white/5 rounded-xl flex items-center justify-center text-[#8A9BC4] hover:bg-white/[0.02] transition-colors cursor-pointer"
+                title="Open system core logs terminal"
+                aria-label="Admin console"
+              >
+                <Cpu className="w-4 h-4" />
+              </motion.button>
+            )}
+
+            {/* Scroll to topmost cockpit helper */}
             <motion.button
-              whileHover={{ scale: 1.15, y: -2 }}
-              whileTap={{ scale: 0.85 }}
+              whileHover={{ scale: 1.1 }}
               onClick={scrollToTop}
               className="w-9 h-9 border border-white/5 rounded-xl flex items-center justify-center text-[#8A9BC4] hover:bg-white/[0.02] transition-all cursor-pointer"
               title="Return to topmost cockpit deck"
               aria-label="Scroll to top"
               style={{
-                borderColor: isGreen ? 'rgba(57, 255, 20, 0.15)' : 'rgba(0, 212, 255, 0.15)'
+                borderColor: getOpacityRgba(accentColor, 0.15)
               }}
             >
               <ChevronUp className={`w-4 h-4 ${textAccentClass}`} />
@@ -360,45 +338,51 @@ export default function FooterSection({ accentColor, onOpenAdmin, availabilitySt
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 20, stiffness: 150 }}
-            className="fixed bottom-0 left-0 right-0 h-[240px] z-[99] bg-[#050816] border-t border-[#39FF14]/30 p-6 flex flex-col justify-between font-mono shadow-[0_-15px_40px_rgba(57,255,20,0.15)] text-left"
+            className="fixed bottom-0 left-0 right-0 h-[240px] z-[99] bg-[#050816] border-t p-6 flex flex-col justify-between font-mono shadow-[0_-15px_40px_rgba(57,255,20,0.15)] text-left"
             style={{
-              borderColor: isGreen ? '#39FF14' : '#00D4FF'
+              borderColor: accentHex,
+              boxShadow: `0 -15px 40px ${getOpacityRgba(accentColor, 0.15)}`
             }}
           >
             <div className="flex items-center justify-between border-b border-white/5 pb-2 text-[10px] text-[#8A9BC4] uppercase tracking-widest font-extrabold font-mono">
               <span className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-red-500 animate-ping inline-block" />
-                <span>● COCKPIT SYSTEM CONSOLE_ROOT</span>
+                SYSTEM ACCESS TERMINAL COCKPIT Override_
               </span>
               <button 
-                onClick={() => {
-                  playClickSound('click');
-                  setEasterEggActive(false);
-                }}
-                className="hover:text-red-400 font-bold transition-colors cursor-pointer text-xs font-mono"
+                onClick={() => setEasterEggActive(false)}
+                className="text-white hover:text-red-400 hover:scale-110 font-bold transition-all px-2 py-0.5 border border-white/10 rounded cursor-pointer"
               >
-                DISMISS [ESC]
+                CLOSE [ESC]
               </button>
             </div>
 
-            {/* Printing outputs */}
-            <div className={`flex-grow py-4 overflow-y-auto font-mono text-[12px] space-y-1.5 scrollbar-thin ${textAccentClass}`}>
-              {terminalLines.map((line, index) => (
-                <div key={index} className="leading-snug animate-fade-in font-mono">
+            {/* Screen Logs Output */}
+            <div className="flex-grow overflow-y-auto font-mono text-[11px] leading-relaxed text-[#CAD5EE] my-3 space-y-1 scrollbar-thin">
+              {terminalLines.map((line, idx) => (
+                <div key={idx} className={line.startsWith('>') ? `${textAccentClass} font-bold` : 'text-[#8A9BC4]'}>
                   {line}
                 </div>
               ))}
               <div ref={terminalEndRef} />
             </div>
 
-            <div className="border-t border-white/5 pt-2 text-[9px] text-[#8A9BC4] flex justify-between uppercase font-mono">
-              <span>DECRYPTED COCKPIT SEC_CORE // LATENCY STABLE</span>
-              <span>EST. ENUGU DECK // ONLINE</span>
-            </div>
+            {/* Input Action bar */}
+            <form onSubmit={handleCommandSubmit} className="flex gap-2">
+              <span className={`font-mono text-xs font-bold leading-none self-center ${textAccentClass}`}>
+                &gt;_ 
+              </span>
+              <input 
+                type="text"
+                value={currentInput}
+                onChange={(e) => setCurrentInput(e.target.value)}
+                placeholder="Inquire about system metrics... (about, skills, contact, clear)"
+                className="flex-grow bg-white/5 text-xs text-[#E5E9F0] border-0 placeholder:text-[#4A5A80] focus:ring-1 p-2 rounded focus:ring-white/10 outline-none"
+              />
+            </form>
           </motion.div>
         )}
       </AnimatePresence>
-
     </footer>
   );
 }

@@ -1,13 +1,13 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ExternalLink, ChevronRight, Server, PhoneCall, Globe, Truck, Users, Search, Code, Cpu, ShieldAlert, X } from 'lucide-react';
 import { portfolioData } from '../data';
 import { Project } from '../types';
 import ProjectDetailModal from './ProjectDetailModal';
-import { playClickSound } from '../utils';
+import { playClickSound, getAccentHex, getAccentTextClass, getAccentBgClass, getAccentBorderClass } from '../utils';
 
 interface ProjectsSectionProps {
-  accentColor: 'green' | 'cyan';
+  accentColor: 'green' | 'cyan' | 'pink' | 'purple' | 'yellow';
   dbProjects?: any[];
 }
 
@@ -18,10 +18,64 @@ export default function ProjectsSection({ accentColor, dbProjects }: ProjectsSec
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const accentTextClass = accentColor === 'green' ? 'text-[#39FF14]' : 'text-[#00D4FF]';
-  const bgAccentClass = accentColor === 'green' ? 'bg-[#39FF14]' : 'bg-[#00D4FF]';
-  const borderAccentClass = accentColor === 'green' ? 'border-[#39FF14]' : 'border-[#00D4FF]';
-  const accentBorderHoverClass = accentColor === 'green' ? 'hover:border-[#39FF14]/30' : 'hover:border-[#00D4FF]/30';
+  // Slider Mouse Drag State
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const [isMouseDown, setIsMouseDown] = useState(false);
+  const [isDraggingTabs, setIsDraggingTabs] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!tabsRef.current) return;
+    setIsMouseDown(true);
+    setIsDraggingTabs(false);
+    setStartX(e.pageX - tabsRef.current.offsetLeft);
+    setScrollLeft(tabsRef.current.scrollLeft);
+  };
+
+  const handleMouseLeaveOrUp = () => {
+    setIsMouseDown(false);
+    setTimeout(() => {
+      setIsDraggingTabs(false);
+    }, 50);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isMouseDown || !tabsRef.current) return;
+    const x = e.pageX - tabsRef.current.offsetLeft;
+    const walk = (x - startX) * 1.5; // Scroll speed scaling factor
+    if (Math.abs(x - startX) > 5) {
+      setIsDraggingTabs(true);
+    }
+    tabsRef.current.scrollLeft = scrollLeft - walk;
+  };
+
+  const accentTextClass = getAccentTextClass(accentColor);
+  const bgAccentClass = getAccentBgClass(accentColor);
+  const borderAccentClass = getAccentBorderClass(accentColor);
+  
+  const getAccentBorderHoverClass = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'hover:border-[#39FF14]/30';
+      case 'cyan': return 'hover:border-[#00D4FF]/30';
+      case 'pink': return 'hover:border-[#FF007F]/30';
+      case 'purple': return 'hover:border-[#BD00FF]/30';
+      case 'yellow': return 'hover:border-[#FFE600]/30';
+      default: return 'hover:border-[#39FF14]/30';
+    }
+  };
+  const accentBorderHoverClass = getAccentBorderHoverClass(accentColor);
+
+  const getFocusClasses = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'focus:border-[#39FF14] focus:ring-[#39FF14]/20';
+      case 'cyan': return 'focus:border-[#00D4FF] focus:ring-[#00D4FF]/20';
+      case 'pink': return 'focus:border-[#FF007F] focus:ring-[#FF007F]/20';
+      case 'purple': return 'focus:border-[#BD00FF] focus:ring-[#BD00FF]/20';
+      case 'yellow': return 'focus:border-[#FFE600] focus:ring-[#FFE600]/20';
+      default: return 'focus:border-[#39FF14] focus:ring-[#39FF14]/20';
+    }
+  };
 
   // Parse project source: if dbProjects exists and isn't empty, use formatted db projects. Otherwise use static data.
   const projectsToUse: Project[] = useMemo(() => {
@@ -137,7 +191,7 @@ export default function ProjectsSection({ accentColor, dbProjects }: ProjectsSec
                 placeholder="LAUNCH SMART CRYPTO_QUERY... (E.g. Next.js, Web3, iOS, Python)"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`w-full bg-slate-950/75 border border-white/10 rounded-xl pl-10 pr-10 py-3 text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-${accentColor === 'green' ? '[#39FF14]' : '[#00D4FF]'} focus:ring-1 focus:ring-${accentColor === 'green' ? '[#39FF14]' : '[#00D4FF]'}/20 transition-all uppercase tracking-wide`}
+                className={`w-full bg-slate-950/75 border border-white/10 rounded-xl pl-10 pr-10 py-3 text-xs text-white placeholder-slate-500 focus:outline-hidden ${getFocusClasses(accentColor)} focus:ring-1 transition-all uppercase tracking-wide`}
               />
               <div className="absolute inset-y-0 right-3 flex items-center gap-2">
                 {searchQuery ? (
@@ -170,24 +224,39 @@ export default function ProjectsSection({ accentColor, dbProjects }: ProjectsSec
             </div>
           </div>
 
-          {/* Quick Tag Pills */}
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            {availableTags.map((tag) => {
-              const isActive = selectedTag === tag;
-              return (
-                <button
-                  key={tag}
-                  onClick={() => {
-                    playClickSound('click');
-                    setSelectedTag(tag);
-                  }}
-                  onMouseEnter={() => playClickSound('hover')}
-                  className={`px-3 py-1.5 rounded-lg border text-[8.5px] font-mono uppercase font-bold tracking-wider cursor-pointer transition-all ${isActive ? `${borderAccentClass} ${bgAccentClass}/10 text-white shadow-[0_0_10px_rgba(57,255,20,0.05)]` : 'border-white/5 bg-slate-950/20 text-slate-400 hover:text-white hover:border-white/15'}`}
-                >
-                  {tag === 'all' ? '● ALL DEPLOYMENTS' : tag}
-                </button>
-              );
-            })}
+          {/* Quick Tag Pills (Horizontal slide-to-scroll carousel track) */}
+          <div className="relative w-full overflow-hidden">
+            {/* Visual gradient indicators suggesting off-screen content, using the primary background color */}
+            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#050816] to-transparent pointer-events-none z-10" />
+            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#050816] to-transparent pointer-events-none z-10" />
+
+            <div 
+              ref={tabsRef}
+              onMouseDown={handleMouseDown}
+              onMouseUp={handleMouseLeaveOrUp}
+              onMouseLeave={handleMouseLeaveOrUp}
+              onMouseMove={handleMouseMove}
+              className={`flex flex-row flex-nowrap gap-2 overflow-x-auto scrollbar-none py-2 px-1 select-none scroll-smooth ${isMouseDown ? 'cursor-grabbing' : 'cursor-grab'}`}
+            >
+              {availableTags.map((tag) => {
+                const isActive = selectedTag === tag;
+                return (
+                  <button
+                    key={tag}
+                    onClick={() => {
+                      if (!isDraggingTabs) {
+                        playClickSound('click');
+                        setSelectedTag(tag);
+                      }
+                    }}
+                    onMouseEnter={() => playClickSound('hover')}
+                    className={`px-3.5 py-2.5 rounded-lg border text-[8.5px] font-mono uppercase font-bold tracking-wider cursor-pointer transition-all shrink-0 select-none ${isActive ? `${borderAccentClass} ${bgAccentClass}/10 text-white shadow-[0_0_12px_rgba(57,255,20,0.1)]` : 'border-white/5 bg-slate-950/25 text-slate-400 hover:text-white hover:border-white/10 hover:bg-slate-950/45'}`}
+                  >
+                    {tag === 'all' ? '● ALL DEPLOYMENTS' : tag}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 

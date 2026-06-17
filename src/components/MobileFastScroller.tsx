@@ -12,10 +12,10 @@ import {
   Send,
   Settings
 } from 'lucide-react';
-import { playClickSound } from '../utils';
+import { playClickSound, getAccentHex, getAccentTextClass, getAccentBgClass, getAccentBorderClass } from '../utils';
 
 interface MobileFastScrollerProps {
-  accentColor: 'green' | 'cyan';
+  accentColor: 'green' | 'cyan' | 'pink' | 'purple' | 'yellow';
   onSettingsClick?: () => void;
 }
 
@@ -34,10 +34,21 @@ export default function MobileFastScroller({ accentColor, onSettingsClick }: Mob
   
   const railRef = useRef<HTMLDivElement>(null);
 
-  const themeColor = accentColor === 'green' ? '#39FF14' : '#00D4FF';
-  const textAccentClass = accentColor === 'green' ? 'text-[#39FF14]' : 'text-[#00D4FF]';
-  const bgAccentClass = accentColor === 'green' ? 'bg-[#39FF14]' : 'bg-[#00D4FF]';
-  const borderAccentClass = accentColor === 'green' ? 'border-[#39FF14]/30' : 'border-[#00D4FF]/30';
+  const themeColor = getAccentHex(accentColor);
+  const textAccentClass = getAccentTextClass(accentColor);
+  const bgAccentClass = getAccentBgClass(accentColor);
+  
+  const getBorderAccentClassWithOpacity30 = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'border-[#39FF14]/30';
+      case 'cyan': return 'border-[#00D4FF]/30';
+      case 'pink': return 'border-[#FF007F]/30';
+      case 'purple': return 'border-[#BD00FF]/30';
+      case 'yellow': return 'border-[#FFE600]/30';
+      default: return 'border-[#39FF14]/30';
+    }
+  };
+  const borderAccentClass = getBorderAccentClassWithOpacity30(accentColor);
 
   const items: ScrollerItem[] = [
     { id: 'settings', label: 'SYSTEM CONFIG', shortLabel: 'SETTINGS', icon: Settings },
@@ -236,8 +247,18 @@ export default function MobileFastScroller({ accentColor, onSettingsClick }: Mob
           
           if (active) {
             iconClass += `${textAccentClass} scale-110`;
+            const getDropShadowByColor = (color: typeof accentColor) => {
+              switch (color) {
+                case 'green': return 'drop-shadow(0 0 8px rgba(57,255,20,0.5))';
+                case 'cyan': return 'drop-shadow(0 0 8px rgba(0,212,255,0.5))';
+                case 'pink': return 'drop-shadow(0 0 8px rgba(255,0,127,0.5))';
+                case 'purple': return 'drop-shadow(0 0 8px rgba(189,0,255,0.5))';
+                case 'yellow': return 'drop-shadow(0 0 8px rgba(255,230,0,0.5))';
+                default: return 'drop-shadow(0 0 8px rgba(57,255,20,0.5))';
+              }
+            };
             iconStyle = {
-              filter: accentColor === 'green' ? 'drop-shadow(0 0 8px rgba(57,255,20,0.5))' : 'drop-shadow(0 0 8px rgba(0,212,255,0.5))'
+              filter: getDropShadowByColor(accentColor)
             };
           } else if (scrolledPast) {
             iconClass += "scale-100";

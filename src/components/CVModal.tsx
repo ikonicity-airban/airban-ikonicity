@@ -19,12 +19,12 @@ import {
   Terminal,
   Settings
 } from 'lucide-react';
-import { playClickSound, handleDownloadCV } from '../utils';
+import { playClickSound, handleDownloadCV, getAccentTextClass, getAccentBgClass } from '../utils';
 
 interface CVModalProps {
   isOpen: boolean;
   onClose: () => void;
-  accentColor: 'green' | 'cyan';
+  accentColor: 'green' | 'cyan' | 'pink' | 'purple' | 'yellow';
 }
 
 export default function CVModal({ isOpen, onClose, accentColor }: CVModalProps) {
@@ -44,15 +44,81 @@ export default function CVModal({ isOpen, onClose, accentColor }: CVModalProps) 
   if (!isOpen) return null;
 
   const isGreen = accentColor === 'green';
-  const textAccent = isGreen ? 'text-[#39FF14]' : 'text-[#00D4FF]';
-  const bgAccent = isGreen ? 'bg-[#39FF14]' : 'bg-[#00D4FF]';
-  const borderAccent = isGreen ? 'border-[#39FF14]/30' : 'border-[#00D4FF]/30';
-  const borderAccentStrong = isGreen ? 'border-[#39FF14]' : 'border-[#00D4FF]';
-  const glowShadow = isGreen ? 'shadow-[0_0_25px_rgba(57,255,20,0.15)]' : 'shadow-[0_0_25px_rgba(0,212,255,0.15)]';
+  const textAccent = getAccentTextClass(accentColor);
+  const bgAccent = getAccentBgClass(accentColor);
+
+  const getBorderAccent = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'border-[#39FF14]/30';
+      case 'cyan': return 'border-[#00D4FF]/30';
+      case 'pink': return 'border-[#FF007F]/30';
+      case 'purple': return 'border-[#BD00FF]/30';
+      case 'yellow': return 'border-[#FFE600]/30';
+      default: return 'border-[#39FF14]/30';
+    }
+  };
+
+  const getBorderAccentStrong = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'border-[#39FF14]';
+      case 'cyan': return 'border-[#00D4FF]';
+      case 'pink': return 'border-[#FF007F]';
+      case 'purple': return 'border-[#BD00FF]';
+      case 'yellow': return 'border-[#FFE600]';
+      default: return 'border-[#39FF14]';
+    }
+  };
+
+  const getGlowShadow = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'shadow-[0_0_25px_rgba(57,255,20,0.15)]';
+      case 'cyan': return 'shadow-[0_0_25px_rgba(0,212,255,0.15)]';
+      case 'pink': return 'shadow-[0_0_25px_rgba(255,0,127,0.15)]';
+      case 'purple': return 'shadow-[0_0_25px_rgba(189,0,255,0.15)]';
+      case 'yellow': return 'shadow-[0_0_25px_rgba(255,230,0,0.15)]';
+      default: return 'shadow-[0_0_25px_rgba(57,255,20,0.15)]';
+    }
+  };
+
+  const getPrintHeaderColor = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return '#1E9E06';
+      case 'cyan': return '#0083B0';
+      case 'pink': return '#D8006B';
+      case 'purple': return '#9D00D8';
+      case 'yellow': return '#B2A000';
+      default: return '#1E9E06';
+    }
+  };
+
+  const getPrintBorderColor = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return '#5aff40';
+      case 'cyan': return '#4cd9ff';
+      case 'pink': return '#ff4099';
+      case 'purple': return '#df40ff';
+      case 'yellow': return '#ffea40';
+      default: return '#5aff40';
+    }
+  };
+
+  const borderAccent = getBorderAccent(accentColor);
+  const borderAccentStrong = getBorderAccentStrong(accentColor);
+  const glowShadow = getGlowShadow(accentColor);
   
-  // Deep-styled CSS header colors for specific section titles
-  const hColorLeft = isGreen ? 'text-[#39FF14]' : 'text-[#00D4FF]';
-  const hColorRight = isGreen ? 'text-[#50E4FF]' : 'text-[#85FF50]'; // Complementary color accents
+  const hColorLeft = textAccent;
+
+  const getComplementaryAccent = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'text-[#50E4FF]'; // cyan
+      case 'cyan': return 'text-[#85FF50]'; // green
+      case 'pink': return 'text-[#BD00FF]'; // purple
+      case 'purple': return 'text-[#FF007F]'; // pink
+      case 'yellow': return 'text-[#FF007F]'; // pink
+      default: return 'text-[#50E4FF]';
+    }
+  };
+  const hColorRight = getComplementaryAccent(accentColor);
 
   const handlePrint = () => {
     playClickSound('success');
@@ -128,13 +194,13 @@ export default function CVModal({ isOpen, onClose, accentColor }: CVModalProps) 
                 color: white !important;
               }
               .print-section-header {
-                color: ${isGreen ? '#1E9E06' : '#0083B0'} !important;
-                border-bottom: 2px solid ${isGreen ? '#5aff40' : '#4cd9ff'} !important;
+                color: ${getPrintHeaderColor(accentColor)} !important;
+                border-bottom: 2px solid ${getPrintBorderColor(accentColor)} !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
               }
               .print-bullet-point {
-                color: ${isGreen ? '#1E9E06' : '#0083B0'} !important;
+                color: ${getPrintHeaderColor(accentColor)} !important;
               }
               .no-print {
                 display: none !important;

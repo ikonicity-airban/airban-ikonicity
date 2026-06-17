@@ -127,3 +127,12 @@
 .text-brand-muted {
   color: #CAD5EE !important;
 }
+
+/* Hide scrollbar compatibility */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}

@@ -4,14 +4,15 @@ import { Send, Mail, Phone, MapPin, Loader2, Check, AlertCircle, Github, Linkedi
 import { db } from '../firebase';
 import { collection, addDoc } from 'firebase/firestore';
 
+import { getAccentHex, getAccentTextClass, getAccentBgClass, getAccentBorderClass } from '../utils';
+
 interface ContactSectionProps {
-  accentColor: 'green' | 'cyan';
+  accentColor: 'green' | 'cyan' | 'pink' | 'purple' | 'yellow';
 }
 
 export default function ContactSection({ accentColor }: ContactSectionProps) {
-  const isGreen = accentColor === 'green';
-  const textAccentClass = isGreen ? 'text-[#39FF14]' : 'text-[#00D4FF]';
-  const borderAccentClass = isGreen ? 'border-[#39FF14]' : 'border-[#00D4FF]';
+  const textAccentClass = getAccentTextClass(accentColor);
+  const borderAccentClass = getAccentBorderClass(accentColor);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -166,9 +167,7 @@ export default function ContactSection({ accentColor }: ContactSectionProps) {
       <div 
         className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[70vw] h-[250px] rounded-full pointer-events-none z-0 filter blur-[120px] opacity-[0.02]"
         style={{
-          background: isGreen 
-            ? 'radial-gradient(circle, rgba(57, 255, 20, 0.3) 0%, transparent 80%)' 
-            : 'radial-gradient(circle, rgba(0, 212, 255, 0.3) 0%, transparent 80%)',
+          background: `radial-gradient(circle, ${getAccentHex(accentColor)}4d 0%, transparent 80%)`,
         }}
       />
 

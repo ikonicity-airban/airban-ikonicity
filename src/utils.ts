@@ -1,3 +1,5 @@
+import { AccentColor } from './types';
+
 /**
  * Shared Dynamic Utilities for Airban Ikonicity Portfolio
  */
@@ -206,4 +208,181 @@ export const normalizeVideoUrl = (url: string): string => {
   
   return trimmed;
 };
+
+export const getAccentHex = (color: AccentColor): string => {
+  switch (color) {
+    case 'green': return '#39FF14';
+    case 'cyan': return '#00D4FF';
+    case 'pink': return '#FF007F';
+    case 'purple': return '#BD00FF';
+    case 'yellow': return '#FFE600';
+    default: return '#39FF14';
+  }
+};
+
+export const getAccentTextClass = (color: AccentColor): string => {
+  switch (color) {
+    case 'green': return 'text-[#39FF14]';
+    case 'cyan': return 'text-[#00D4FF]';
+    case 'pink': return 'text-[#FF007F]';
+    case 'purple': return 'text-[#BD00FF]';
+    case 'yellow': return 'text-[#FFE600]';
+    default: return 'text-[#39FF14]';
+  }
+};
+
+export const getAccentBgClass = (color: AccentColor): string => {
+  switch (color) {
+    case 'green': return 'bg-[#39FF14]';
+    case 'cyan': return 'bg-[#00D4FF]';
+    case 'pink': return 'bg-[#FF007F]';
+    case 'purple': return 'bg-[#BD00FF]';
+    case 'yellow': return 'bg-[#FFE600]';
+    default: return 'bg-[#39FF14]';
+  }
+};
+
+export const getAccentBorderClass = (color: AccentColor): string => {
+  switch (color) {
+    case 'green': return 'border-[#39FF14]';
+    case 'cyan': return 'border-[#00D4FF]';
+    case 'pink': return 'border-[#FF007F]';
+    case 'purple': return 'border-[#BD00FF]';
+    case 'yellow': return 'border-[#FFE600]';
+    default: return 'border-[#39FF14]';
+  }
+};
+
+export const getViaColorClass = (color: AccentColor): string => {
+  switch (color) {
+    case 'green': return 'via-[#39FF14]';
+    case 'cyan': return 'via-[#00D4FF]';
+    case 'pink': return 'via-[#FF007F]';
+    case 'purple': return 'via-[#BD00FF]';
+    case 'yellow': return 'via-[#FFE600]';
+    default: return 'via-[#39FF14]';
+  }
+};
+
+export const getAccentSelectionClass = (color: AccentColor): string => {
+  switch (color) {
+    case 'green': return 'selection:bg-[#39FF14]/30 selection:text-[#39FF14]';
+    case 'cyan': return 'selection:bg-[#00D4FF]/30 selection:text-[#00D4FF]';
+    case 'pink': return 'selection:bg-[#FF007F]/30 selection:text-[#FF007F]';
+    case 'purple': return 'selection:bg-[#BD00FF]/30 selection:text-[#BD00FF]';
+    case 'yellow': return 'selection:bg-[#FFE600]/30 selection:text-[#FFE600]';
+    default: return 'selection:bg-[#39FF14]/30 selection:text-[#39FF14]';
+  }
+};
+
+export const getAccentHoverTextClass = (color: AccentColor): string => {
+  switch (color) {
+    case 'green': return 'hover:text-[#39FF14] group-hover:text-[#39FF14]';
+    case 'cyan': return 'hover:text-[#00D4FF] group-hover:text-[#00D4FF]';
+    case 'pink': return 'hover:text-[#FF007F] group-hover:text-[#FF007F]';
+    case 'purple': return 'hover:text-[#BD00FF] group-hover:text-[#BD00FF]';
+    case 'yellow': return 'hover:text-[#FFE600] group-hover:text-[#FFE600]';
+    default: return 'hover:text-[#39FF14] group-hover:text-[#39FF14]';
+  }
+};
+
+export const getAccentHoverBorderClass = (color: AccentColor): string => {
+  switch (color) {
+    case 'green': return 'hover:border-[#39FF14]';
+    case 'cyan': return 'hover:border-[#00D4FF]';
+    case 'pink': return 'hover:border-[#FF007F]';
+    case 'purple': return 'hover:border-[#BD00FF]';
+    case 'yellow': return 'hover:border-[#FFE600]';
+    default: return 'hover:border-[#39FF14]';
+  }
+};
+
+export const getAccentBorder30Class = (color: AccentColor): string => {
+  switch (color) {
+    case 'green': return 'border-[#39FF14]/30';
+    case 'cyan': return 'border-[#00D4FF]/30';
+    case 'pink': return 'border-[#FF007F]/30';
+    case 'purple': return 'border-[#BD00FF]/30';
+    case 'yellow': return 'border-[#FFE600]/30';
+    default: return 'border-[#39FF14]/30';
+  }
+};
+
+export const getAccentBorder50Class = (color: AccentColor): string => {
+  switch (color) {
+    case 'green': return 'border-[#39FF14]/50';
+    case 'cyan': return 'border-[#00D4FF]/50';
+    case 'pink': return 'border-[#FF007F]/50';
+    case 'purple': return 'border-[#BD00FF]/50';
+    case 'yellow': return 'border-[#FFE600]/50';
+    default: return 'border-[#39FF14]/50';
+  }
+};
+
+export const getAccentBg10Class = (color: AccentColor): string => {
+  switch (color) {
+    case 'green': return 'bg-[#39FF14]/10';
+    case 'cyan': return 'bg-[#00D4FF]/10';
+    case 'pink': return 'bg-[#FF007F]/10';
+    case 'purple': return 'bg-[#BD00FF]/10';
+    case 'yellow': return 'bg-[#FFE600]/10';
+    default: return 'bg-[#39FF14]/10';
+  }
+};
+
+export const getAccentBg5Class = (color: AccentColor): string => {
+  switch (color) {
+    case 'green': return 'bg-[#39FF14]/5';
+    case 'cyan': return 'bg-[#00D4FF]/5';
+    case 'pink': return 'bg-[#FF007F]/5';
+    case 'purple': return 'bg-[#BD00FF]/5';
+    case 'yellow': return 'bg-[#FFE600]/5';
+    default: return 'bg-[#39FF14]/5';
+  }
+};
+
+export const getAccentHoverBg10Class = (color: AccentColor): string => {
+  switch (color) {
+    case 'green': return 'hover:bg-[#39FF14]/10';
+    case 'cyan': return 'hover:bg-[#00D4FF]/10';
+    case 'pink': return 'hover:bg-[#FF007F]/10';
+    case 'purple': return 'hover:bg-[#BD00FF]/10';
+    case 'yellow': return 'hover:bg-[#FFE600]/10';
+    default: return 'hover:bg-[#39FF14]/10';
+  }
+};
+
+export const getAccentShadowClass = (color: AccentColor): string => {
+  switch (color) {
+    case 'green': return 'shadow-[0_0_15px_rgba(57,255,20,0.25)]';
+    case 'cyan': return 'shadow-[0_0_15px_rgba(0,212,255,0.25)]';
+    case 'pink': return 'shadow-[0_0_15px_rgba(255,0,127,0.25)]';
+    case 'purple': return 'shadow-[0_0_15px_rgba(189,0,255,0.25)]';
+    case 'yellow': return 'shadow-[0_0_15px_rgba(255,230,0,0.25)]';
+    default: return 'shadow-[0_0_15px_rgba(57,255,20,0.25)]';
+  }
+};
+
+export const getAccentShadowGlowClass = (color: AccentColor): string => {
+  switch (color) {
+    case 'green': return 'shadow-[0_0_25px_rgba(57,255,20,0.15)]';
+    case 'cyan': return 'shadow-[0_0_25px_rgba(0,212,255,0.15)]';
+    case 'pink': return 'shadow-[0_0_25px_rgba(255,0,127,0.15)]';
+    case 'purple': return 'shadow-[0_0_25px_rgba(189,0,255,0.15)]';
+    case 'yellow': return 'shadow-[0_0_25px_rgba(255,230,0,0.15)]';
+    default: return 'shadow-[0_0_25px_rgba(57,255,20,0.15)]';
+  }
+};
+
+export const getAccentRgba = (color: AccentColor, opacity: number): string => {
+  switch (color) {
+    case 'green': return `rgba(57, 255, 20, ${opacity})`;
+    case 'cyan': return `rgba(0, 212, 255, ${opacity})`;
+    case 'pink': return `rgba(255, 0, 127, ${opacity})`;
+    case 'purple': return `rgba(189, 0, 255, ${opacity})`;
+    case 'yellow': return `rgba(255, 230, 0, ${opacity})`;
+    default: return `rgba(57, 255, 20, ${opacity})`;
+  }
+};
+
 

@@ -1,22 +1,22 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, useScroll, useTransform } from 'motion/react';
+import { motion, useScroll, useTransform, AnimatePresence } from 'motion/react';
 import { portfolioData } from '../data';
-import { playClickSound } from '../utils';
+import { playClickSound, getAccentHex, getAccentTextClass, getAccentBorderClass } from '../utils';
 
 interface AboutSectionProps {
-  accentColor: 'green' | 'cyan';
+  accentColor: 'green' | 'cyan' | 'pink' | 'purple' | 'yellow';
 }
 
 interface RoadmapCardProps {
   node: typeof portfolioData.timelineData[0];
   index: number;
   isEven: boolean;
-  nodeColorClass: string;
   borderAccentClass: string;
   accentTextClass: string;
+  accentColor: 'green' | 'cyan' | 'pink' | 'purple' | 'yellow';
 }
 
-function RoadmapCard({ node, index, isEven, nodeColorClass, borderAccentClass, accentTextClass }: RoadmapCardProps) {
+function RoadmapCard({ node, index, isEven, borderAccentClass, accentTextClass, accentColor }: RoadmapCardProps) {
   const elementRef = useRef<HTMLDivElement>(null);
 
   // Track the scroll progress of each specific Roadmap item relative to the viewport
@@ -35,6 +35,13 @@ function RoadmapCard({ node, index, isEven, nodeColorClass, borderAccentClass, a
   const y = useTransform(scrollYProgress, [0, 0.18, 0.65, 0.95], [100, 0, -60, -220]);
   const rotateX = useTransform(scrollYProgress, [0, 0.18, 0.65, 0.95], [10, 0, -12, -28]);
 
+  const primaryAccentHex = getAccentHex(accentColor);
+  const nodeGlowRgba = accentColor === 'green' ? 'rgba(57, 255, 20, 0.6)' :
+                       accentColor === 'cyan' ? 'rgba(0, 212, 255, 0.6)' :
+                       accentColor === 'pink' ? 'rgba(255, 0, 127, 0.6)' :
+                       accentColor === 'purple' ? 'rgba(189, 0, 255, 0.6)' :
+                       'rgba(255, 230, 0, 0.6)';
+
   return (
     <div ref={elementRef} className="relative group text-left my-8" style={{ perspective: '1200px' }}>
       <motion.div
@@ -48,7 +55,14 @@ function RoadmapCard({ node, index, isEven, nodeColorClass, borderAccentClass, a
         className="relative w-full"
       >
         {/* Visual Node line anchor point */}
-        <span className={`absolute -left-[31px] md:-left-[55px] top-1.5 w-3.5 h-3.5 rounded-full border-2 border-[#050816] z-10 transition-all duration-300 group-hover:scale-125 ${nodeColorClass}`} />
+        <span 
+          className="absolute -left-[31px] md:-left-[55px] top-1.5 w-3.5 h-3.5 rounded-full border-2 border-[#050816] z-10 transition-all duration-300 group-hover:scale-125"
+          style={{
+            backgroundColor: primaryAccentHex,
+            borderColor: primaryAccentHex,
+            boxShadow: `0 0 15px ${nodeGlowRgba}`
+          }}
+        />
 
         {/* Card wrapper */}
         <div 
@@ -107,6 +121,16 @@ export default function AboutSection({ accentColor }: AboutSectionProps) {
   const [globalProgress, setGlobalProgress] = useState(0);
   const [, setRandomTick] = useState(0);
 
+  const [activePillar, setActivePillar] = useState(0);
+
+  // Autonomous continuous loop for Philosophy Pillars carousel
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActivePillar((prev) => (prev + 1) % portfolioData.philosophyPillars.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [activePillar]);
+
   const pillarsRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress: pillarScroll } = useScroll({
     target: pillarsRef,
@@ -124,8 +148,8 @@ export default function AboutSection({ accentColor }: AboutSectionProps) {
   // Map vertical scroll of the philosophies card container to horizontal translation (right to left)
   const xTrack = useTransform(pillarScroll, [0, 0.85], [120, -360]);
 
-  const accentTextClass = accentColor === 'green' ? 'text-[#39FF14]' : 'text-[#00D4FF]';
-  const accentBorderClass = accentColor === 'green' ? 'border-[#39FF14]' : 'border-[#00D4FF]';
+  const accentTextClass = getAccentTextClass(accentColor);
+  const accentBorderClass = getAccentBorderClass(accentColor);
 
   // Concat all texts to design a single integrated animation stream
   const paragraphs = portfolioData.aboutNarrative;
@@ -215,10 +239,10 @@ export default function AboutSection({ accentColor }: AboutSectionProps) {
                 return (
                   <p 
                     key={index} 
-                    className={index === 0 ? "text-white font-bold text-sm sm:text-base border-l-2 pl-3.5 border-[#39FF14]" : ""}
+                    className={index === 0 ? `text-white font-bold text-sm sm:text-base border-l-2 pl-3.5 ${getAccentBorderClass(accentColor)}` : ""}
                   >
                     <span>{revealed}</span>
-                    <span className={accentColor === 'green' ? "text-[#39FF14] font-mono tracking-wider ml-0.5" : "text-[#00D4FF] font-mono tracking-wider ml-0.5"}>
+                    <span className={`${getAccentTextClass(accentColor)} font-mono tracking-wider ml-0.5`}>
                       {scrambled}
                     </span>
                   </p>
@@ -226,14 +250,14 @@ export default function AboutSection({ accentColor }: AboutSectionProps) {
               })}
               
               <div className="border-t border-white/5 pt-4">
-                <blockquote className="italic border-l-2 border-[#00D4FF] pl-4 text-white text-xs sm:text-sm font-mono tracking-wide py-1 bg-white/[0.01] rounded-r-xl">
+                <blockquote className={`italic border-l-2 ${getAccentBorderClass(accentColor)} pl-4 text-white text-xs sm:text-sm font-mono tracking-wide py-1 bg-white/[0.01] rounded-r-xl`}>
                   "
                   {(() => {
                     const { revealed, scrambled } = getRenderParts(paragraphs.length);
                     return (
                       <>
                         <span>{revealed}</span>
-                        <span className="text-[#00D4FF] ml-0.5">{scrambled}</span>
+                        <span className={`${getAccentTextClass(accentColor)} ml-0.5`}>{scrambled}</span>
                       </>
                     );
                   })()}
@@ -247,44 +271,82 @@ export default function AboutSection({ accentColor }: AboutSectionProps) {
           <div className="lg:col-span-5 relative py-6 flex flex-col gap-6">
             <div 
               ref={pillarsRef}
-              className="p-5 rounded-2xl bg-[#080D1F] border border-white/5 flex flex-col justify-between hover:border-[#39FF14]/20 transition-all group overflow-hidden"
+              className={`p-5 rounded-2xl bg-[#080D1F] border border-white/5 flex flex-col justify-between transition-all group overflow-hidden min-h-[220px] hover:border-current`}
+              style={{ color: getAccentHex(accentColor) }}
             >
-              <span className={`text-[9px] font-mono font-black ${accentTextClass} tracking-widest uppercase mb-1`}>[ SYSTEM PHILOSOPHIES ]</span>
-              <h3 className="text-sm font-display font-black text-white tracking-wider mb-4 uppercase">Three Philosophy Pillars</h3>
+              <div>
+                <span className={`text-[9px] font-mono font-black ${accentTextClass} tracking-widest uppercase mb-1`}>[ SYSTEM PHILOSOPHIES ]</span>
+                <h3 className="text-sm font-display font-black text-white tracking-wider mb-4 uppercase">Three Philosophy Pillars</h3>
+              </div>
               
-              <div className="overflow-hidden w-full">
-                <motion.div 
-                  className="flex flex-row md:flex-col gap-10 md:gap-0 md:space-y-6 w-max md:w-full"
-                  style={{ x: isMobile ? xTrack : 0 }}
-                >
-                  {portfolioData.philosophyPillars.map((pillar, idx) => (
-                    <div 
-                      key={idx} 
-                      className="space-y-1.5 font-mono text-left w-[240px] md:w-full shrink-0"
-                    >
-                      <span className="block text-white font-bold text-xs uppercase tracking-wide">{pillar.title}</span>
-                      <span className="block text-xs font-mono text-[#8A9BC4] leading-none mb-1 select-none">{pillar.tagline}</span>
-                      <span className="block text-[11px] text-[#8A9BC4] leading-normal">{pillar.description}</span>
-                    </div>
-                  ))}
-                </motion.div>
+              <div className="relative overflow-hidden w-full min-h-[90px] flex items-center">
+                <AnimatePresence mode="wait">
+                  <motion.div 
+                    key={activePillar}
+                    initial={{ opacity: 0, x: 25 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -25 }}
+                    transition={{ duration: 0.35, ease: "easeInOut" }}
+                    className="space-y-1.5 font-mono text-left w-full shrink-0"
+                  >
+                    <span className="block text-white font-bold text-xs uppercase tracking-wide">
+                      {portfolioData.philosophyPillars[activePillar].title}
+                    </span>
+                    <span className="block text-xs font-mono text-[#8A9BC4] leading-none mb-1 select-none">
+                      {portfolioData.philosophyPillars[activePillar].tagline}
+                    </span>
+                    <span className="block text-[11px] text-[#8A9BC4] leading-normal">
+                      {portfolioData.philosophyPillars[activePillar].description}
+                    </span>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {/* Navigation Dots */}
+              <div className="flex items-center justify-start gap-2.5 mt-4 pt-2 border-t border-white/5">
+                {portfolioData.philosophyPillars.map((_, idx) => {
+                  const isActive = idx === activePillar;
+                  return (
+                    <button
+                      key={idx}
+                      id={`philosophy-dot-${idx}`}
+                      onClick={() => {
+                        playClickSound('click');
+                        setActivePillar(idx);
+                      }}
+                      className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${isActive ? 'w-6 bg-current' : 'w-1.5 bg-white/20 hover:bg-white/40'}`}
+                      style={{ color: isActive ? getAccentHex(accentColor) : undefined }}
+                      aria-label={`Go to philosophy pillar ${idx + 1}`}
+                    />
+                  );
+                })}
               </div>
             </div>
             
             {/* Nsukka Tracker Radar Visual */}
             <div className="relative w-full aspect-video rounded-2xl bg-[#080D1F] border border-white/5 flex flex-col items-center justify-center p-6 overflow-hidden">
-              <div className="absolute inset-0 bg-[#39FF14]/[0.01] pointer-events-none" />
+              <div 
+                className="absolute inset-0 pointer-events-none" 
+                style={{ backgroundColor: `${getAccentHex(accentColor)}03` }}
+              />
               <div className="absolute top-2 left-3 font-mono text-[7px] text-[#8A9BC4] flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#39FF14] animate-ping" />
+                <span 
+                  className="w-1.5 h-1.5 rounded-full animate-ping" 
+                  style={{ backgroundColor: getAccentHex(accentColor) }}
+                />
                 LAGOS_NSUKKA_LINK: STABLE
               </div>
               
-              <svg className="w-24 h-24 text-[#39FF14] opacity-50 absolute right-4 bottom-4" viewBox="0 0 200 200">
+              <svg 
+                className="w-24 h-24 opacity-50 absolute right-4 bottom-4" 
+                viewBox="0 0 200 200"
+                style={{ color: getAccentHex(accentColor) }}
+              >
                 <circle cx="100" cy="100" r="85" stroke="currentColor" strokeWidth="1" strokeDasharray="3 6" fill="none" />
                 <circle cx="100" cy="100" r="55" stroke="currentColor" strokeWidth="1" strokeOpacity="0.5" fill="none" />
                 <line x1="100" y1="15" x2="100" y2="185" stroke="currentColor" strokeWidth="1" strokeOpacity="0.2" />
                 <line x1="15" y1="100" x2="185" y2="100" stroke="currentColor" strokeWidth="1" strokeOpacity="0.2" />
-                <line x1="100" y1="100" x2="160" y2="40" stroke="#00D4FF" strokeWidth="1.5" className="origin-center animate-[spin_4s_linear_infinite]" />
+                <line x1="100" y1="100" x2="160" y2="40" stroke="currentColor" strokeWidth="1.5" className="origin-center animate-[spin_4s_linear_infinite]" />
               </svg>
               
               <div className="text-left font-mono text-[9px] text-[#8A9BC4] space-y-1 w-full relative z-10 pl-2">
@@ -292,6 +354,69 @@ export default function AboutSection({ accentColor }: AboutSectionProps) {
                 <span className="block text-[10px] text-white mt-1">"Solve the complex problems no one wants to face. Then teach others how."</span>
                 <span className="block text-slate-500 font-mono text-[8px] mt-2">GEO: 6.8561° N, 7.3958° E - Nsukka · UPTIME: 100%</span>
               </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Status Dashboard Terminal Row */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-12 pt-12 border-t border-white/5 text-left font-mono">
+          
+          {/* Left panel: Currently Status */}
+          <div className="md:col-span-5 p-6 rounded-2xl bg-[#080D1F] border border-white/5 space-y-4">
+            <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+              <span className="w-2 h-2 rounded-full inline-block animate-pulse" style={{ backgroundColor: getAccentHex(accentColor) }} />
+              <h3 className="text-xs font-black tracking-widest text-white uppercase">
+                ACTIVE PURSUITS // ENGAGEMENT DIAL
+              </h3>
+            </div>
+            
+            <div className="space-y-3.5 text-xs">
+              <div className="grid grid-cols-3 gap-2">
+                <span className="text-slate-500 font-extrabold">&gt;_ BUILDING</span>
+                <span className="col-span-2 text-white font-bold">{(portfolioData as any).currently?.building}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <span className="text-slate-500 font-extrabold">&gt;_ MAINTAINING</span>
+                <span className="col-span-2 text-white font-bold">{(portfolioData as any).currently?.maintaining}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <span className="text-slate-500 font-extrabold">&gt;_ CONSULTING</span>
+                <span className="col-span-2 text-white font-bold">{(portfolioData as any).currently?.consulting}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <span className="text-slate-500 font-extrabold">&gt;_ OPEN TO</span>
+                <span className="col-span-2 text-[#8A9BC4]">{(portfolioData as any).currently?.openTo}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Center panel: What I Don't Build */}
+          <div className="md:col-span-3 p-6 rounded-2xl bg-[#080D1F] border border-white/5 flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 border-b border-white/5 pb-3 text-red-400">
+                <span className="w-2 h-2 rounded-full bg-red-500/80 inline-block" />
+                <h3 className="text-xs font-black tracking-widest uppercase text-red-500">
+                  BOUNDARIES // DECLINED SCOPE
+                </h3>
+              </div>
+              <div className="text-[11px] leading-relaxed text-[#8A9BC4] uppercase font-mono">
+                {(portfolioData as any).whatIDontBuild}
+              </div>
+            </div>
+            <div className="text-[8px] text-red-500/60 font-black mt-4 uppercase">// SCAM / DECEPTION ESCROWS ALWAYS DISCARDED</div>
+          </div>
+
+          {/* Right panel: Beyond the Code - Personal Touch */}
+          <div className="md:col-span-4 p-6 rounded-2xl bg-[#080D1F] border border-white/5 space-y-3">
+            <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+              <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: getAccentHex(accentColor) }} />
+              <h3 className="text-xs font-black tracking-widest text-white uppercase">
+                BEYOND CODE // TENOR & COMPOSITION
+              </h3>
+            </div>
+            <div className="text-[11px] leading-relaxed text-[#8A9BC4] font-sans">
+              {(portfolioData as any).beyondCode}
             </div>
           </div>
 
@@ -316,17 +441,14 @@ export default function AboutSection({ accentColor }: AboutSectionProps) {
           <div className="relative border-l border-white/10 ml-4 md:ml-10 pl-6 md:pl-12 space-y-6 overflow-visible pb-12">
             
             {/* Glowing background gradient line overlay */}
-            <div className="absolute top-0 bottom-0 left-0 w-[1.5px] bg-gradient-to-b from-[#39FF14] via-[#00D4FF] to-transparent pointer-events-none" />
+            <div 
+              className="absolute top-0 bottom-0 left-0 w-[1.5px] pointer-events-none" 
+              style={{ background: `linear-gradient(to bottom, ${getAccentHex(accentColor)}, transparent)` }}
+            />
 
             {portfolioData.timelineData.map((node, index) => {
               const isEven = index % 2 === 0;
-              const nodeColorClass = isEven 
-                ? "shadow-[0_0_15px_rgba(57,255,20,0.6)] bg-[#39FF14] border-[#39FF14]" 
-                : "shadow-[0_0_15px_rgba(0,212,255,0.6)] bg-[#00D4FF] border-[#00D4FF]";
-              
-              const borderAccentClass = isEven
-                ? `border-white/5 hover:${accentBorderClass}/30`
-                : `border-white/5 hover:${accentBorderClass}/30`;
+              const borderAccentClass = `border-white/5 hover:${accentBorderClass}/30`;
 
               return (
                 <RoadmapCard 
@@ -334,9 +456,9 @@ export default function AboutSection({ accentColor }: AboutSectionProps) {
                   node={node}
                   index={index}
                   isEven={isEven}
-                  nodeColorClass={nodeColorClass}
                   borderAccentClass={borderAccentClass}
                   accentTextClass={accentTextClass}
+                  accentColor={accentColor}
                 />
               );
             })}

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Home, Info, Layers, Cpu, Mail, Sparkles } from 'lucide-react';
-import { playClickSound } from '../utils';
+import { playClickSound, getAccentTextClass, getAccentBgClass } from '../utils';
 
 interface ScrollProgressHUDProps {
-  accentColor: 'green' | 'cyan';
+  accentColor: 'green' | 'cyan' | 'pink' | 'purple' | 'yellow';
 }
 
 interface NavSection {
@@ -18,10 +18,32 @@ export default function ScrollProgressHUD({ accentColor }: ScrollProgressHUDProp
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeSection, setActiveSection] = useState('home');
 
-  const textAccentClass = accentColor === 'green' ? 'text-[#39FF14]' : 'text-[#00D4FF]';
-  const bgAccentClass = accentColor === 'green' ? 'bg-[#39FF14]' : 'bg-[#00D4FF]';
-  const borderAccentClass = accentColor === 'green' ? 'border-[#39FF14]/40' : 'border-[#00D4FF]/40';
-  const shadowGlowClass = accentColor === 'green' ? 'shadow-[0_0_12px_#39FF14]' : 'shadow-[0_0_12px_#00D4FF]';
+  const textAccentClass = getAccentTextClass(accentColor);
+  const bgAccentClass = getAccentBgClass(accentColor);
+
+  const getBorderAccentClassWithOpacity40 = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'border-[#39FF14]/40';
+      case 'cyan': return 'border-[#00D4FF]/40';
+      case 'pink': return 'border-[#FF007F]/40';
+      case 'purple': return 'border-[#BD00FF]/40';
+      case 'yellow': return 'border-[#FFE600]/40';
+      default: return 'border-[#39FF14]/40';
+    }
+  };
+  const borderAccentClass = getBorderAccentClassWithOpacity40(accentColor);
+
+  const getShadowGlowClass = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'shadow-[0_0_12px_#39FF14]';
+      case 'cyan': return 'shadow-[0_0_12px_#00D4FF]';
+      case 'pink': return 'shadow-[0_0_12px_#FF007F]';
+      case 'purple': return 'shadow-[0_0_12px_#BD00FF]';
+      case 'yellow': return 'shadow-[0_0_12px_#FFE600]';
+      default: return 'shadow-[0_0_12px_#39FF14]';
+    }
+  };
+  const shadowGlowClass = getShadowGlowClass(accentColor);
 
   const sections: NavSection[] = [
     { id: 'home', label: 'Home Deck', code: 'SEC_000', icon: <Home className="w-3.5 h-3.5" /> },

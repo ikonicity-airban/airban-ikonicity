@@ -9,7 +9,18 @@ export const portfolioData = {
   github: "https://github.com/ikonicity-airban",
   address: "Nsukka Enugu State",
   
-  pullQuote: "A lot of developers don't like to do the muddy stuff — the debugging, the renovation, the extensive research. I do. I only feel comfortable when we're building something.",
+  pullQuote: "You have to find your own way. Not every problem has the same solution, and most problems have more than one.",
+  
+  currently: {
+    building: "Geek Creations",
+    maintaining: "iCatholic Igbo (70k+ users)",
+    consulting: "PWorld Concepts",
+    openTo: "Freelance · Contract · Full-Time · Remote"
+  },
+  
+  beyondCode: "Music runs as deep as engineering does. I play keyboard, acoustic and bass guitar, drums, and recorder — and sing tenor in a choir I help direct and compose for. When I'm not coding, I'm usually painting, baking, cooking, or pulled into a football match — either watching or solving the kind of puzzle that doesn't compile.",
+  
+  whatIDontBuild: "I decline any work involving fraud, deception, or scams — as a matter of personal conviction, not just policy.",
   
   aboutNarrative: [
     "I'm a Full-Stack Software Engineer with a foundation in Electronics and Computer Engineering.",
@@ -131,7 +142,7 @@ export const portfolioData = {
       logoText: "GC",
       tech: ["React", "Shopify Storefront API", "Crypto Payments"],
       links: [
-        { label: "Live Site", url: "#" },
+        { label: "Live Site", url: "https://geekcreations.vercel.app" },
         { label: "Case Study", url: "#" }
       ],
       meta: "TX_RATE: 1.8s // GLOBAL_DELIVERY: ENABLED"
@@ -140,13 +151,13 @@ export const portfolioData = {
       id: "icatholic-igbo",
       title: "iCatholic Igbo",
       subtitle: "Catholic missal and media platform. App Store + Play Store.",
-      tag: "Contributor · React Native · 70,000+ Users",
+      tag: "Contributor · React Native · 70k+ Users",
       description: "Catholic missal and Igbo liturgy media platform serving global users. Responsible for extensive database optimizations, offline audio playback components, and refactoring a large untyped codebase.",
       status: "🟢 Live",
       logoText: "IC",
       tech: ["React Native (Expo)"],
       links: [
-        { label: "App Store", url: "#" },
+        { label: "Live Site", url: "https://icatholicigbo.com" },
         { label: "Play Store", url: "#" }
       ],
       meta: "DL_COUNT: 70K+ // UPTIME: 99.99%"
@@ -154,17 +165,45 @@ export const portfolioData = {
     {
       id: "biddo",
       title: "Biddo",
-      subtitle: "Live property auction with heatmaps and real-time buyer-seller communication.",
+      subtitle: "Live property auction platform with real-time bidding, heatmaps, and bidder communication.",
       tag: "Full-Stack · Real-Time · Auction Platform",
       description: "A real-time property auction platform with live tracking, heatmaps, and bidder communication, optimized to solve severe memory leaks in Dockerized Express & Next.js instances.",
-      status: "🟢 Live",
+      status: "🟢 Live (actual active users)",
       logoText: "BD",
       tech: ["Next.js", "Express.js", "Docker", "DigitalOcean"],
       links: [
-        { label: "Web App", url: "#" },
+        { label: "Web App", url: "https://web.biddo.info" },
         { label: "App Platform", url: "#" }
       ],
       meta: "REAL_TIME: active // DB_LATENCY: 12ms"
+    },
+    {
+      id: "estc-tourism",
+      title: "ESTC (Enugu State Tourism)",
+      subtitle: "Discover and book tours across Enugu State, Nigeria.",
+      tag: "Full-Stack · Tourism · Booking Platform",
+      description: "A tourism discovery and booking platform showcasing tour sites, travel packages, and services across Enugu State. Built end-to-end as solo full-stack developer — from data modeling to deployment.",
+      status: "🟢 Live",
+      logoText: "ES",
+      tech: ["React (Vite)", "Firebase"],
+      links: [
+        { label: "Live Site", url: "https://vite-tour.netlify.app/" }
+      ],
+      meta: "REGION: ENUGU // SOLO_DEV"
+    },
+    {
+      id: "heartzibah-shop",
+      title: "Heartzibah Shop",
+      subtitle: "Online storefront for baby wares and household essentials.",
+      tag: "Frontend · E-Commerce · Client Work",
+      description: "A frontend e-commerce build for a retail client specializing in baby wares, household utensils, appliances, and food supplies. Delivered as a contract engagement through Automated Cafe.",
+      status: "⚪ Archived (client-owned)",
+      logoText: "HZ",
+      tech: ["React", "CSS", "JavaScript"],
+      links: [
+        { label: "Archived Portal", url: "#" }
+      ],
+      meta: "STATUS: COMPLETED // ARCHIVED"
     },
     {
       id: "rabbai",
@@ -172,7 +211,7 @@ export const portfolioData = {
       subtitle: "AI-powered exam preparation suite.",
       tag: "Frontend Engineer · AI & Cognitive Design",
       description: "AI exam prep platform targeting WAEC, NECO, and JAMB students, designed around highly performant custom retrieval context pipelines.",
-      status: "🟢 Live",
+      status: "🔴 Sunset (Blaitware)",
       logoText: "RA",
       tech: ["React", "FastAPI", "Docker"],
       links: [
@@ -181,16 +220,16 @@ export const portfolioData = {
       meta: "AI_LATENCY: 145ms"
     },
     {
-      id: "whatsapp-crm",
-      title: "WhatsApp CRM",
-      subtitle: "Automation and workflow optimization SaaS.",
+      id: "waplug",
+      title: "WAPlug",
+      subtitle: "WhatsApp CRM & automation plugin engine.",
       tag: "Founder · Lead Engineer · Automation",
       description: "Automation workflow engine linking headless WhatsApp container nodes with local CRM dispatch routines using Baileys and Meta API.",
-      status: "🟡 Active Development (Phase 2)",
+      status: "🟢 Live",
       logoText: "WA",
       tech: ["Baileys", "Meta API", "Node.js"],
       links: [
-        { label: "Demo Video", url: "#" }
+        { label: "Live Site", url: "https://plugins-wa.onrender.com" }
       ],
       meta: "DISPATCHES: 15K/day"
     },
@@ -202,7 +241,7 @@ export const portfolioData = {
       description: "Decentralized ecosystem home and Telegram bot integrations powering blockchain automated transactions.",
       status: "🟢 Live",
       logoText: "SF",
-      tech: ["Next.js", "sofegroup.com"],
+      tech: ["Next.js", "Telegram Bot API", "Web3"],
       links: [
         { label: "Live Site", url: "https://sofegroup.com" }
       ],
@@ -218,7 +257,7 @@ export const portfolioData = {
       logoText: "OY",
       tech: ["React", "Google Maps", "Paystack"],
       links: [
-        { label: "Deployment", url: "#" }
+        { label: "Live Site", url: "https://oyadrop.com" }
       ],
       meta: "LATENCY: 54ms // GPS: LOCKED"
     },
@@ -226,15 +265,29 @@ export const portfolioData = {
       id: "eb-pathway",
       title: "EB Pathway",
       subtitle: "Immigration automation and role-based workflows.",
-      tag: "Freelance Software Engineer · SaaS",
+      tag: "Freelance Software Engineer · SaaS (NDA)",
       description: "Strict role-based file-processing engine with document compiler microservices.",
       status: "🟢 Live",
       logoText: "EB",
-      tech: ["Full-Stack", "Role-based workflows"],
+      tech: ["React", "Node.js", "PostgreSQL"],
       links: [
-        { label: "Internal Deck", url: "#" }
+        { label: "Live Site", url: "https://ebpathway.netlify.net" }
       ],
       meta: "WORKFLOWS: STRICT"
+    },
+    {
+      id: "inextai",
+      title: "iNextAI",
+      subtitle: "Emotion-aware AI crypto trading platform on the Internet Computer.",
+      tag: "Contributor · Web3 · AI Trading",
+      description: "Contributed feature-level development to iNextAI — a Web3 platform combining AI market analysis with emotional trading pattern tracking, built on ICP with Internet Identity authentication and cross-chain support.",
+      status: "🟢 Live (contributor role)",
+      logoText: "IN",
+      tech: ["ICP", "Internet Identity", "Web3", "AI"],
+      links: [
+        { label: "Web3 App", url: "#" }
+      ],
+      meta: "AUTHENTICATION: II // PROTOCOL: ICP"
     }
   ] as Project[],
 

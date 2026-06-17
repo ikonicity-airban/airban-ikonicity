@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 interface Cyberpunk3DModelProps {
-  accentColor: 'green' | 'cyan';
+  accentColor: 'green' | 'cyan' | 'pink' | 'purple' | 'yellow';
 }
 
 export default function Cyberpunk3DModel({ accentColor }: Cyberpunk3DModelProps) {
@@ -15,6 +15,20 @@ export default function Cyberpunk3DModel({ accentColor }: Cyberpunk3DModelProps)
   const colors = {
     green: 0x39ff14,
     cyan: 0x00d4ff,
+    pink: 0xff007f,
+    purple: 0xbd00ff,
+    yellow: 0xffe600,
+  };
+
+  const getComplementaryColorVal = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 0x00d4ff; // cyan
+      case 'cyan': return 0x39ff14; // green
+      case 'pink': return 0xbd00ff; // purple
+      case 'purple': return 0xff007f; // pink
+      case 'yellow': return 0xff007f; // pink / magenta looks incredible on yellow
+      default: return 0x00d4ff;
+    }
   };
 
   const primaryColor = colors[accentColor] || colors.green;
@@ -181,7 +195,7 @@ export default function Cyberpunk3DModel({ accentColor }: Cyberpunk3DModelProps)
 
         const ringGeo2 = new THREE.TorusGeometry(1.4, 0.012, 8, 64);
         const ringMat2 = new THREE.MeshBasicMaterial({
-          color: accentColor === 'green' ? 0x00d4ff : 0x39ff14, // Intersecting dual-theme glowing color
+          color: getComplementaryColorVal(accentColor), // Intersecting dual-theme glowing color
           transparent: true,
           opacity: 0.5,
         });

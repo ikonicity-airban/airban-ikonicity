@@ -1,8 +1,9 @@
 import { motion } from 'motion/react';
 import { Layers, Database, Cpu, Cloud, Link as LinkIcon, Compass, Play } from 'lucide-react';
+import { getAccentHex, getAccentTextClass, getAccentBgClass, getViaColorClass } from '../utils';
 
 interface ServicesSectionProps {
-  accentColor: 'green' | 'cyan';
+  accentColor: 'green' | 'cyan' | 'pink' | 'purple' | 'yellow';
 }
 
 interface ServiceCard {
@@ -119,10 +120,43 @@ const processSteps = [
 ];
 
 export default function ServicesSection({ accentColor }: ServicesSectionProps) {
-  const accentTextClass = accentColor === 'green' ? 'text-[#39FF14]' : 'text-[#00D4FF]';
-  const accentBorderLeftClass = accentColor === 'green' ? 'border-l-2 border-l-[#39FF14]' : 'border-l-2 border-l-[#00D4FF]';
-  const hoverBorders = accentColor === 'green' ? 'hover:border-[#39FF14]/40 hover:shadow-[0_0_20px_rgba(57,255,20,0.1)]' : 'hover:border-[#00D4FF]/40 hover:shadow-[0_0_20px_rgba(0,212,255,0.1)]';
-  const ctaBtnColorClass = accentColor === 'green' ? 'bg-[#39FF14] text-[#050816] hover:bg-[#32e012]' : 'bg-[#00D4FF] text-[#050816] hover:bg-[#00b2d6]';
+  const accentTextClass = getAccentTextClass(accentColor);
+  
+  const getAccentBorderLeftClass = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'border-l-2 border-l-[#39FF14]';
+      case 'cyan': return 'border-l-2 border-l-[#00D4FF]';
+      case 'pink': return 'border-l-2 border-l-[#FF007F]';
+      case 'purple': return 'border-l-2 border-l-[#BD00FF]';
+      case 'yellow': return 'border-l-2 border-l-[#FFE600]';
+      default: return 'border-l-2 border-l-[#39FF14]';
+    }
+  };
+  const accentBorderLeftClass = getAccentBorderLeftClass(accentColor);
+
+  const getHoverBorders = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'hover:border-[#39FF14]/40 hover:shadow-[0_0_20px_rgba(57,255,20,0.1)]';
+      case 'cyan': return 'hover:border-[#00D4FF]/40 hover:shadow-[0_0_20px_rgba(0,212,255,0.1)]';
+      case 'pink': return 'hover:border-[#FF007F]/40 hover:shadow-[0_0_20px_rgba(255,0,127,0.1)]';
+      case 'purple': return 'hover:border-[#BD00FF]/40 hover:shadow-[0_0_20px_rgba(189,0,255,0.1)]';
+      case 'yellow': return 'hover:border-[#FFE600]/40 hover:shadow-[0_0_20px_rgba(255,230,0,0.1)]';
+      default: return 'hover:border-[#39FF14]/40 hover:shadow-[0_0_20px_rgba(57,255,20,0.1)]';
+    }
+  };
+  const hoverBorders = getHoverBorders(accentColor);
+
+  const getCtaBtnColorClass = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'bg-[#39FF14] text-[#050816] hover:bg-[#32e012]';
+      case 'cyan': return 'bg-[#00D4FF] text-[#050816] hover:bg-[#00b2d6]';
+      case 'pink': return 'bg-[#FF007F] text-[#050816] hover:bg-[#d40066]';
+      case 'purple': return 'bg-[#BD00FF] text-[#050816] hover:bg-[#9900cc]';
+      case 'yellow': return 'bg-[#FFE600] text-[#050816] hover:bg-[#ccb400]';
+      default: return 'bg-[#39FF14] text-[#050816] hover:bg-[#32e012]';
+    }
+  };
+  const ctaBtnColorClass = getCtaBtnColorClass(accentColor);
 
   const scrollToContact = () => {
     const el = document.getElementById('transmit');
@@ -238,19 +272,43 @@ export default function ServicesSection({ accentColor }: ServicesSectionProps) {
         <div className="mt-16">
           <div className="p-8 rounded-2xl bg-[#080D1F] border border-white/5 relative overflow-hidden text-center max-w-4xl mx-auto">
             {/* Glowing sweep overlay */}
-            <div className={`absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-${accentColor === 'green' ? '[#39FF14]' : '[#00D4FF]'} to-transparent opacity-55 animate-pulse`} />
+            <div className={`absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent ${getViaColorClass(accentColor)} to-transparent opacity-55 animate-pulse`} />
             
             <div className="space-y-5">
               <div className="flex items-center justify-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${accentColor === 'green' ? 'bg-[#39FF14]' : 'bg-[#00D4FF]'} animate-ping`} />
+                <span className={`w-2 h-2 rounded-full ${getAccentBgClass(accentColor)} animate-ping`} />
                 <span className="text-[10px] font-mono font-black uppercase text-white tracking-widest">
                   Currently available for new engagements
                 </span>
               </div>
               
-              <h3 className="text-lg sm:text-2xl font-display font-black text-white uppercase tracking-wider uppercase leading-none">
+              <h3 className="text-lg sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none">
                 Freelance · Contract · Full-Time · Remote
               </h3>
+
+              {/* Pricing & Engagement Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-4 text-left font-mono text-[11px] max-w-3xl mx-auto border-t border-b border-white/5 py-5 my-2">
+                <div className="p-3.5 rounded bg-white/[0.01] border border-white/[0.03]">
+                  <span className="block text-[#8A9BC4] text-[9px] uppercase font-bold tracking-widest">// STARTING FROM</span>
+                  <span className="block text-white font-extrabold text-sm mt-1">₦70,000</span>
+                  <span className="block text-slate-500 text-[9px] mt-0.5">Basic 4-page website</span>
+                </div>
+                <div className="p-3.5 rounded bg-white/[0.01] border border-white/[0.03]">
+                  <span className="block text-[#8A9BC4] text-[9px] uppercase font-bold tracking-widest">// TIMELINE</span>
+                  <span className="block text-white font-extrabold text-sm mt-1">DYNAMIC</span>
+                  <span className="block text-slate-500 text-[9px] mt-0.5">Project-dependent scope</span>
+                </div>
+                <div className="p-3.5 rounded bg-white/[0.01] border border-white/[0.03]">
+                  <span className="block text-[#8A9BC4] text-[9px] uppercase font-bold tracking-widest">// RETAINERS</span>
+                  <span className="block text-white font-extrabold text-sm mt-1">AVAILABLE</span>
+                  <span className="block text-slate-500 text-[9px] mt-0.5">Ongoing support plans</span>
+                </div>
+                <div className="p-3.5 rounded bg-white/[0.01] border border-white/[0.03]">
+                  <span className="block text-[#8A9BC4] text-[9px] uppercase font-bold tracking-widest">// PRICING MODEL</span>
+                  <span className="block text-white font-extrabold text-xs mt-1.5 leading-snug">CUSTOM</span>
+                  <span className="block text-slate-500 text-[9px] mt-0.5">No fixed public rates</span>
+                </div>
+              </div>
 
               <div className="pt-4 flex justify-center">
                 <button 

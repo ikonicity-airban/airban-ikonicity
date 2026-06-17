@@ -1,8 +1,9 @@
 import { motion } from 'motion/react';
 import { Briefcase, Calendar, MapPin, ExternalLink, Sparkles, Server } from 'lucide-react';
+import { getAccentHex, getAccentTextClass, getAccentBgClass } from '../utils';
 
 interface WorkExperienceSectionProps {
-  accentColor: 'green' | 'cyan';
+  accentColor: 'green' | 'cyan' | 'pink' | 'purple' | 'yellow';
 }
 
 interface TimelineEntry {
@@ -27,12 +28,13 @@ const timelineEntries: TimelineEntry[] = [
     id: "001",
     company: "Wisdom Internet Services",
     period: "2019 – 2022",
-    type: "On-site · Full-time",
-    location: "Nigeria",
+    type: "Cyber Café · On-site",
+    location: "Nsukka — University of Nigeria, Nsukka Campus",
     role: "Computer Analyst & Operator",
     isActive: false,
     responsibilities: [
       "Managed and maintained computer systems and network infrastructure for daily business operations",
+      "Gained advanced proficiency in Microsoft Word, Excel, and PowerPoint — particularly strong in Word, supporting document-heavy administrative and academic work for café clients",
       "Diagnosed and resolved hardware, software, and connectivity issues across the organization",
       "Supported internal users with technical problems, system configuration, and operational workflows",
       "Introduced structured documentation for recurring technical issues, reducing resolution time"
@@ -48,28 +50,29 @@ const timelineEntries: TimelineEntry[] = [
     role: "Frontend Engineer",
     isActive: false,
     responsibilities: [
-      "Designed and developed the frontend for Heartzibah Shop — a client-facing e-commerce storefront",
+      "Designed and developed the frontend for Heartzibah Shop — a client-facing e-commerce storefront for baby wares and household essentials",
       "Translated business requirements directly into production UI with no design handoff",
       "Delivered a complete, responsive shopping interface within a short engagement window"
     ],
+    note: "Automated Cafe is a tech agency; Heartzibah Shop was their client project, not their own product.",
     stack: ["React", "CSS", "JavaScript"]
   },
   {
     id: "003",
     company: "Blaitware",
     period: "Early 2023 – Late 2023",
-    type: "Contract · Software Engineering Firm",
-    location: "Nigeria",
+    type: "Contract · Remote",
+    location: "Remote engagement",
     role: "Frontend Engineer",
     isActive: false,
     responsibilities: [
-      "Core frontend engineer on RabbAi — an exam preparation platform targeting WAEC, NECO, and JAMB candidates with unified student-facing portals",
+      "Core frontend engineer on RabbAi — built this exam prep suite completely remotely, with zero on-site presence required",
       "Built the student-facing dashboard, score tracking interface, and real-time chatbot UI",
       "Integrated AI features at a time when stable SDKs were largely unavailable — required custom solutions and first-principles implementation",
       "Collaborated directly with a backend engineer across the full product lifecycle from concept to production deployment"
     ],
     stack: ["React", "Python (FastAPI)", "Docker"],
-    outcome: "Project was sunset due to data sourcing constraints. Delivered a complete working product to production."
+    outcome: "Project was sunset because of data sourcing constraints. Delivered a complete working product to production entirely from remote environment."
   },
   {
     id: "004",
@@ -94,47 +97,93 @@ const timelineEntries: TimelineEntry[] = [
     id: "005",
     company: "PWorld Concepts",
     period: "2024 – Present",
-    type: "Freelance · Software Consultancy",
-    location: "Nigeria",
-    role: "Freelance Software Consultant & Developer",
+    type: "Freelance · Consulting",
+    location: "Nsukka, Nigeria (UNN Base)",
+    role: "Software Developer / Consultant",
     isActive: true,
     responsibilities: [
-      "Core contributor to iCatholic Igbo — a Catholic missal, prayer guide, and media platform now serving 70,000+ users across iOS and Android",
+      "Primary developer actively managing, maintaining, and supporting the iCatholic Igbo mobile application suite",
       "Responsible for completing new feature implementations from the data layer up — handling data structures, algorithm design, and integration logic",
-      "Performed deep debugging and architectural refactoring on a large untyped JavaScript codebase — one of the highest-risk, engagements in the project",
-      "Ongoing role as consultant for bug fixes, platform stability, and technical guidance"
+      "Performed deep debugging and architectural refactoring on a large untyped JavaScript codebase — ensuring seamless operations for over 70k users",
+      "Delivered offline liturgical calendars and custom audio player components for continuous global media playback"
     ],
     stack: ["React Native (Expo)", "JavaScript", "TypeScript"],
-    highlight: "70,000+ active users across App Store and Play Store. Untyped JS codebase at scale — every change required surgical precision.",
+    highlight: "Currently managing and maintaining the iCatholic Igbo app with over 70,000+ active users globally.",
     link: { label: "icatholicigbo.com", url: "https://icatholicigbo.com" }
   },
   {
     id: "006",
     company: "The Seventh Legion",
     period: "2025 – Present",
-    type: "Freelance · Rapid Development Studio",
+    type: "Freelance · Rapid Development",
     location: "Nigeria",
     role: "Freelance Software Engineer",
     isActive: true,
     responsibilities: [
-      "Converts generated UI designs and wireframes into fully functional, production-ready platforms",
-      "Built and deployed Oyadrop — a logistics and courier platform enabling goods shipment across Nigeria, integrated with Google Maps and Paystack",
-      "Built and deployed EB Pathway — a full-stack immigration automation platform with role-based workflows across Finance, Research, Support, and Management Layers",
-      "Responsible for full-stack implementation, cloud hosting, and post-launch stability"
+      "Converts visual UI layouts and workflows into fully functional, hardened cloud platforms",
+      "Built and deployed Oyadrop — an on-demand logistics system with live route tracing overlays",
+      "Completed and launched EB Pathway — a multi-tiered file compiler and workflow dispatcher",
+      "Engaged in rapid full-stack software modeling, cloud deployments, and runtime optimizations"
     ],
+    note: "Most Seventh Legion deliverables are covered under NDAs. Publicly listable work is limited to Oyadrop and EB Pathway with high-level descriptions only.",
     stack: ["React", "Next.js", "TypeScript", "Google Maps API", "Paystack", "DigitalOcean", "Docker"],
     projects: [
       { name: "Oyadrop", url: "https://oyadrop.com" },
-      { name: "EB Pathway", url: "https://ebpathway.net" }
+      { name: "EB Pathway", url: "https://ebpathway.netlify.net" }
     ]
   }
 ];
 
 export default function WorkExperienceSection({ accentColor }: WorkExperienceSectionProps) {
-  const accentTextClass = accentColor === 'green' ? 'text-[#39FF14]' : 'text-[#00D4FF]';
-  const accentBorderClass = accentColor === 'green' ? 'border-[#39FF14]/30 hover:border-[#39FF14]/65' : 'border-[#00D4FF]/30 hover:border-[#00D4FF]/65';
-  const dotColorClass = accentColor === 'green' ? 'bg-[#39FF14] shadow-[0_0_15px_#39FF14]' : 'bg-[#00D4FF] shadow-[0_0_15px_#00D4FF]';
-  const pingColorClass = accentColor === 'green' ? 'bg-[#39FF14]' : 'bg-[#00D4FF]';
+  const accentTextClass = getAccentTextClass(accentColor);
+  
+  const getAccentBorderClass = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'border-[#39FF14]/30 hover:border-[#39FF14]/65';
+      case 'cyan': return 'border-[#00D4FF]/30 hover:border-[#00D4FF]/65';
+      case 'pink': return 'border-[#FF007F]/30 hover:border-[#FF007F]/65';
+      case 'purple': return 'border-[#BD00FF]/30 hover:border-[#BD00FF]/65';
+      case 'yellow': return 'border-[#FFE600]/30 hover:border-[#FFE600]/65';
+      default: return 'border-[#39FF14]/30 hover:border-[#39FF14]/65';
+    }
+  };
+  const accentBorderClass = getAccentBorderClass(accentColor);
+
+  const getDotColorClass = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'bg-[#39FF14] shadow-[0_0_15px_#39FF14]';
+      case 'cyan': return 'bg-[#00D4FF] shadow-[0_0_15px_#00D4FF]';
+      case 'pink': return 'bg-[#FF007F] shadow-[0_0_15px_#FF007F]';
+      case 'purple': return 'bg-[#BD00FF] shadow-[0_0_15px_#BD00FF]';
+      case 'yellow': return 'bg-[#FFE600] shadow-[0_0_15px_#FFE600]';
+      default: return 'bg-[#39FF14] shadow-[0_0_15px_#39FF14]';
+    }
+  };
+  const dotColorClass = getDotColorClass(accentColor);
+
+  const pingColorClass = getAccentBgClass(accentColor);
+
+  const getLineGradientClass = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'via-[#39FF14]/40';
+      case 'cyan': return 'via-[#00D4FF]/40';
+      case 'pink': return 'via-[#FF007F]/40';
+      case 'purple': return 'via-[#BD00FF]/40';
+      case 'yellow': return 'via-[#FFE600]/40';
+      default: return 'via-[#39FF14]/40';
+    }
+  };
+
+  const getViaColorClass = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'via-[#39FF14]';
+      case 'cyan': return 'via-[#00D4FF]';
+      case 'pink': return 'via-[#FF007F]';
+      case 'purple': return 'via-[#BD00FF]';
+      case 'yellow': return 'via-[#FFE600]';
+      default: return 'via-[#39FF14]';
+    }
+  };
 
   return (
     <section id="experience" className="py-24 border-t border-white/5 relative z-20 overflow-hidden">
@@ -160,7 +209,7 @@ export default function WorkExperienceSection({ accentColor }: WorkExperienceSec
           
           {/* Centered vertical running line on desktop */}
           <div className="absolute left-4 md:left-1/2 md:-translate-x-1/2 top-0 bottom-0 w-[1px] bg-white/10 pointer-events-none">
-            <div className={`absolute inset-y-0 w-full bg-gradient-to-b from-transparent via-${accentColor === 'green' ? '[#39FF14]/40' : '[#00D4FF]/40'} to-transparent`} />
+            <div className={`absolute inset-y-0 w-full bg-gradient-to-b from-transparent ${getLineGradientClass(accentColor)} to-transparent`} />
           </div>
 
           <div className="space-y-16">
@@ -221,7 +270,10 @@ export default function WorkExperienceSection({ accentColor }: WorkExperienceSec
                       </div>
 
                       {entry.note && (
-                        <p className={`mt-4 text-[11px] leading-relaxed italic text-[#8A9BC4] border-l-2 pl-3.5 ${isEven ? 'md:border-r-2 md:border-l-0 md:pr-3.5 md:pl-0 border-[#39FF14]' : 'border-[#39FF14]'} py-1 bg-white/[0.01] rounded`}>
+                        <p 
+                          className={`mt-4 text-[11px] leading-relaxed italic text-[#8A9BC4] border-l-2 pl-3.5 ${isEven ? 'md:border-r-2 md:border-l-0 md:pr-3.5 md:pl-0' : ''} py-1 bg-white/[0.01] rounded`}
+                          style={{ borderColor: getAccentHex(accentColor) }}
+                        >
                           "{entry.note}"
                         </p>
                       )}
@@ -238,7 +290,7 @@ export default function WorkExperienceSection({ accentColor }: WorkExperienceSec
                       transition={{ duration: 0.6 }}
                     >
                       {/* Cyber Gradient Header bar inside card */}
-                      <div className={`absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-${accentColor === 'green' ? '[#39FF14]' : '[#00D4FF]'} to-transparent opacity-40`} />
+                      <div className={`absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent ${getViaColorClass(accentColor)} to-transparent opacity-40`} />
 
                       {/* Role Label */}
                       <span className={`text-[10px] font-mono uppercase font-black ${accentTextClass} tracking-widest block mb-2`}>

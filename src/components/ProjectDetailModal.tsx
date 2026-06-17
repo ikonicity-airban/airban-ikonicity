@@ -2,22 +2,56 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ExternalLink, ShieldAlert, Cpu, Database, Terminal, Globe, Calendar } from 'lucide-react';
 import { Project } from '../types';
+import { getAccentHex, getAccentTextClass, getAccentBgClass, getAccentBorderClass } from '../utils';
 
 interface ProjectDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   project: Project | null;
-  accentColor: 'green' | 'cyan';
+  accentColor: 'green' | 'cyan' | 'pink' | 'purple' | 'yellow';
 }
 
 export default function ProjectDetailModal({ isOpen, onClose, project, accentColor }: ProjectDetailModalProps) {
   const [logs, setLogs] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<'specs' | 'diagnostics'>('specs');
 
-  const textAccent = accentColor === 'green' ? 'text-[#39FF14]' : 'text-[#00D4FF]';
-  const bgAccent = accentColor === 'green' ? 'bg-[#39FF14]' : 'bg-[#00D4FF]';
-  const borderAccent = accentColor === 'green' ? 'border-[#39FF14]/30' : 'border-[#00D4FF]/30';
-  const glowShadow = accentColor === 'green' ? 'shadow-[0_0_20px_rgba(57,255,20,0.15)]' : 'shadow-[0_0_20px_rgba(0,212,255,0.15)]';
+  const textAccent = getAccentTextClass(accentColor);
+  const bgAccent = getAccentBgClass(accentColor);
+
+  const getBorderAccentWithOpacity30 = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'border-[#39FF14]/30';
+      case 'cyan': return 'border-[#00D4FF]/30';
+      case 'pink': return 'border-[#FF007F]/30';
+      case 'purple': return 'border-[#BD00FF]/30';
+      case 'yellow': return 'border-[#FFE600]/30';
+      default: return 'border-[#39FF14]/30';
+    }
+  };
+  const borderAccent = getBorderAccentWithOpacity30(accentColor);
+
+  const getGlowShadow = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'shadow-[0_0_20px_rgba(57,255,20,0.15)]';
+      case 'cyan': return 'shadow-[0_0_20px_rgba(0,212,255,0.15)]';
+      case 'pink': return 'shadow-[0_0_20px_rgba(255,0,127,0.15)]';
+      case 'purple': return 'shadow-[0_0_20px_rgba(189,0,255,0.15)]';
+      case 'yellow': return 'shadow-[0_0_20px_rgba(255,230,0,0.15)]';
+      default: return 'shadow-[0_0_20px_rgba(57,255,20,0.15)]';
+    }
+  };
+  const glowShadow = getGlowShadow(accentColor);
+
+  const getAccentHoverBg15Class = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'hover:bg-[#39FF14]/15';
+      case 'cyan': return 'hover:bg-[#00D4FF]/15';
+      case 'pink': return 'hover:bg-[#FF007F]/15';
+      case 'purple': return 'hover:bg-[#BD00FF]/15';
+      case 'yellow': return 'hover:bg-[#FFE600]/15';
+      default: return 'hover:bg-[#39FF14]/15';
+    }
+  };
 
   // Backdoor key to disable scrolling behind modal
   useEffect(() => {
@@ -104,13 +138,13 @@ export default function ProjectDetailModal({ isOpen, onClose, project, accentCol
               <div className="flex border-b border-white/5 font-mono text-[10px] uppercase">
                 <button
                   onClick={() => setActiveTab('specs')}
-                  className={`px-4 py-2 border-b-2 font-bold cursor-pointer transition-colors ${activeTab === 'specs' ? `border-${accentColor === 'green' ? '[#39FF14]' : '[#00D4FF]'} text-white` : 'border-transparent text-slate-400 hover:text-white'}`}
+                  className={`px-4 py-2 border-b-2 font-bold cursor-pointer transition-colors ${activeTab === 'specs' ? `${getAccentBorderClass(accentColor)} text-white` : 'border-transparent text-slate-400 hover:text-white'}`}
                 >
                   [01] Architectural Specs
                 </button>
                 <button
                   onClick={() => setActiveTab('diagnostics')}
-                  className={`px-4 py-2 border-b-2 font-bold cursor-pointer transition-colors ${activeTab === 'diagnostics' ? `border-${accentColor === 'green' ? '[#39FF14]' : '[#00D4FF]'} text-white` : 'border-transparent text-slate-400 hover:text-white'}`}
+                  className={`px-4 py-2 border-b-2 font-bold cursor-pointer transition-colors ${activeTab === 'diagnostics' ? `${getAccentBorderClass(accentColor)} text-white` : 'border-transparent text-slate-400 hover:text-white'}`}
                 >
                   [02] System Diagnostics
                 </button>
@@ -196,7 +230,7 @@ export default function ProjectDetailModal({ isOpen, onClose, project, accentCol
                   <a
                     key={idx}
                     href={link.url}
-                    className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 font-mono text-[10px] font-bold px-4 py-2.5 rounded-xl uppercase tracking-wider transition-all border ${idx === 0 ? `${borderAccent} ${bgAccent}/10 text-white hover:bg-${accentColor === 'green' ? '[#39FF14]' : '[#00D4FF]'}/15` : 'border-white/5 bg-white/5 text-[#8A9BC4] hover:text-white hover:bg-white/10'}`}
+                    className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 font-mono text-[10px] font-bold px-4 py-2.5 rounded-xl uppercase tracking-wider transition-all border ${idx === 0 ? `${borderAccent} ${bgAccent}/10 text-white ${getAccentHoverBg15Class(accentColor)}` : 'border-white/5 bg-white/5 text-[#8A9BC4] hover:text-white hover:bg-white/10'}`}
                   >
                     <span>{link.label}</span>
                     <ExternalLink className="w-3.5 h-3.5" />

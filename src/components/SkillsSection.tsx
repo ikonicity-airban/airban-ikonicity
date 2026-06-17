@@ -1,17 +1,50 @@
 import { motion } from 'motion/react';
 import { Cpu, Terminal, GitBranch, Database, Shield, Radio } from 'lucide-react';
 import { portfolioData } from '../data';
-import { playClickSound } from '../utils';
+import { playClickSound, getAccentTextClass, getAccentBgClass } from '../utils';
 
 interface SkillsSectionProps {
-  accentColor: 'green' | 'cyan';
+  accentColor: 'green' | 'cyan' | 'pink' | 'purple' | 'yellow';
 }
 
 export default function SkillsSection({ accentColor }: SkillsSectionProps) {
-  const accentTextClass = accentColor === 'green' ? 'text-[#39FF14]' : 'text-[#00D4FF]';
-  const glowShadowClass = accentColor === 'green' ? 'shadow-[0_0_20px_rgba(57,255,20,0.1)]' : 'shadow-[0_0_20px_rgba(0,212,255,0.1)]';
-  const dotAccentClass = accentColor === 'green' ? 'bg-[#39FF14]/70' : 'bg-[#00D4FF]/70';
-  const hoverBorderAccentClass = accentColor === 'green' ? 'hover:border-[#39FF14]/30' : 'hover:border-[#00D4FF]/30';
+  const accentTextClass = getAccentTextClass(accentColor);
+  
+  const getGlowShadowClass = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'shadow-[0_0_20px_rgba(57,255,20,0.1)]';
+      case 'cyan': return 'shadow-[0_0_20px_rgba(0,212,255,0.1)]';
+      case 'pink': return 'shadow-[0_0_20px_rgba(255,0,127,0.1)]';
+      case 'purple': return 'shadow-[0_0_20px_rgba(189,0,255,0.1)]';
+      case 'yellow': return 'shadow-[0_0_20px_rgba(255,230,0,0.1)]';
+      default: return 'shadow-[0_0_20px_rgba(57,255,20,0.1)]';
+    }
+  };
+  const glowShadowClass = getGlowShadowClass(accentColor);
+
+  const getDotAccentClass = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'bg-[#39FF14]/70';
+      case 'cyan': return 'bg-[#00D4FF]/70';
+      case 'pink': return 'bg-[#FF007F]/70';
+      case 'purple': return 'bg-[#BD00FF]/70';
+      case 'yellow': return 'bg-[#FFE600]/70';
+      default: return 'bg-[#39FF14]/70';
+    }
+  };
+  const dotAccentClass = getDotAccentClass(accentColor);
+
+  const getHoverBorderAccentClass = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'hover:border-[#39FF14]/30';
+      case 'cyan': return 'hover:border-[#00D4FF]/30';
+      case 'pink': return 'hover:border-[#FF007F]/30';
+      case 'purple': return 'hover:border-[#BD00FF]/30';
+      case 'yellow': return 'hover:border-[#FFE600]/30';
+      default: return 'hover:border-[#39FF14]/30';
+    }
+  };
+  const hoverBorderAccentClass = getHoverBorderAccentClass(accentColor);
 
   // Helper icons for categories to add micro-details
   const getCategoryIcon = (categoryName: string) => {

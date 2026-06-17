@@ -3,10 +3,33 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Play, Download } from 'lucide-react';
 // @ts-ignore
 import robotAvatar from '../assets/images/hero-avatar.png';
-import { handleDownloadCV, playClickSound } from '../utils';
+import { handleDownloadCV, playClickSound, getAccentHex, getAccentTextClass, getAccentBgClass, getAccentBorderClass, getAccentRgba } from '../utils';
+
+const containerVariants: any = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.1,
+    }
+  }
+};
+
+const itemVariants: any = {
+  hidden: { opacity: 0, y: 15 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.65,
+      ease: [0.16, 1, 0.3, 1]
+    }
+  }
+};
 
 interface HeroSectionProps {
-  accentColor: 'green' | 'cyan';
+  accentColor: 'green' | 'cyan' | 'pink' | 'purple' | 'yellow';
   videoUrl: string;
   heroBgVideoUrl?: string;
   availabilityStatus?: string;
@@ -41,21 +64,40 @@ export default function HeroSection({ accentColor, videoUrl, heroBgVideoUrl, ava
 
   // Safe background video play & browser autoplay blocker workaround
   useEffect(() => {
-    if (bgVideoRef.current) {
-      bgVideoRef.current.muted = !!isMuted;
-      const playPromise = bgVideoRef.current.play();
+    let isActive = true;
+    const videoElement = bgVideoRef.current;
+
+    if (videoElement) {
+      videoElement.muted = !!isMuted;
+      const playPromise = videoElement.play();
       if (playPromise !== undefined) {
         playPromise.catch((err) => {
+          if (!isActive) return;
+          // Ignore interruption errors due to unmounting or source changes
+          if (err.name === 'AbortError' || err.message?.includes('interrupted')) {
+            console.debug("Video play was aborted or interrupted by user/system action.", err.message);
+            return;
+          }
           console.warn("Autoplay / play was blocked. Retrying with force-mute.", err);
-          if (bgVideoRef.current) {
-            bgVideoRef.current.muted = true;
-            bgVideoRef.current.play().catch((playErr) => {
-              console.error("Autoplay failed completely under current browser restrictions.", playErr);
+          if (videoElement && bgVideoRef.current === videoElement) {
+            videoElement.muted = true;
+            videoElement.play().catch((playErr) => {
+              if (!isActive) return;
+              if (playErr.name === 'AbortError' || playErr.message?.includes('interrupted')) {
+                console.debug("Video second play attempt was aborted or interrupted.", playErr.message);
+                return;
+              }
+              // Safely log as notice/warning, NEVER use console.error to avoid failing deployment/healthcheck policies
+              console.warn("Autoplay failed completely under current browser restrictions.", playErr.message || playErr);
             });
           }
         });
       }
     }
+
+    return () => {
+      isActive = false;
+    };
   }, [currentBgVideo, isMuted]);
 
   const handleVideoError = () => {
@@ -122,7 +164,17 @@ export default function HeroSection({ accentColor, videoUrl, heroBgVideoUrl, ava
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const dotColor = accentColor === 'green' ? '57, 255, 20' : '0, 212, 255';
+      const getDotColorRGB = (color: typeof accentColor) => {
+        switch (color) {
+          case 'green': return '57, 255, 20';
+          case 'cyan': return '0, 212, 255';
+          case 'pink': return '255, 0, 127';
+          case 'purple': return '189, 0, 255';
+          case 'yellow': return '255, 230, 0';
+          default: return '57, 255, 20';
+        }
+      };
+      const dotColor = getDotColorRGB(accentColor);
       
       particles.forEach((p) => {
         p.x += p.vx;
@@ -154,14 +206,33 @@ export default function HeroSection({ accentColor, videoUrl, heroBgVideoUrl, ava
   }, [accentColor]);
 
   // Design tokens aligned with Two-Accent rules and User requests
-  const primaryColorHex = accentColor === 'green' ? '#39FF14' : '#00D4FF';
-  const glowShadowStyle = accentColor === 'green' 
-    ? 'shadow-[0_0_24px_rgba(57,255,20,0.5)]' 
-    : 'shadow-[0_0_24px_rgba(0,212,255,0.5)]';
+  const primaryColorHex = getAccentHex(accentColor);
+  const getGlowShadowStyle = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return 'shadow-[0_0_24px_rgba(57,255,20,0.5)]';
+      case 'cyan': return 'shadow-[0_0_24px_rgba(0,212,255,0.5)]';
+      case 'pink': return 'shadow-[0_0_24px_rgba(255,0,127,0.5)]';
+      case 'purple': return 'shadow-[0_0_24px_rgba(189,0,255,0.5)]';
+      case 'yellow': return 'shadow-[0_0_24px_rgba(255,230,0,0.5)]';
+      default: return 'shadow-[0_0_24px_rgba(57,255,20,0.5)]';
+    }
+  };
+  const glowShadowStyle = getGlowShadowStyle(accentColor);
 
-  const textAccentClass = accentColor === 'green' ? 'text-[#39FF14]' : 'text-[#00D4FF]';
-  const borderAccentClass = accentColor === 'green' ? 'border-[#39FF14]' : 'border-[#00D4FF]';
-  const bgAccentClass = accentColor === 'green' ? 'bg-[#39FF14]' : 'bg-[#00D4FF]';
+  const getSolidAccentColor = (color: typeof accentColor) => {
+    switch (color) {
+      case 'green': return '#2EC413';
+      case 'cyan': return '#00A8CC';
+      case 'pink': return '#D8006C';
+      case 'purple': return '#9A00D0';
+      case 'yellow': return '#D4BE00';
+      default: return '#2EC413';
+    }
+  };
+
+  const textAccentClass = getAccentTextClass(accentColor);
+  const borderAccentClass = getAccentBorderClass(accentColor);
+  const bgAccentClass = getAccentBgClass(accentColor);
   
   // Parallax calculations
   const charParallaxY = scrollY * 0.15;
@@ -226,12 +297,10 @@ export default function HeroSection({ accentColor, videoUrl, heroBgVideoUrl, ava
           <div 
             style={{ 
               fontSize: '14vw',
-              color: accentColor === 'green' ? '#39FF14' : '#00D4FF',
+              color: primaryColorHex,
               lineHeight: '0.9',
               fontWeight: 800,
-              textShadow: accentColor === 'green' 
-                ? '0 0 50px rgba(57, 255, 20, 0.4)' 
-                : '0 0 50px rgba(0, 212, 255, 0.4)'
+              textShadow: `0 0 50px ${getAccentRgba(accentColor, 0.4)}`
             }}
           >
             Airban
@@ -269,17 +338,15 @@ export default function HeroSection({ accentColor, videoUrl, heroBgVideoUrl, ava
       <div 
         className="absolute left-1/2 -translate-x-1/2 bottom-[10%] w-[60vw] max-w-[800px] aspect-square rounded-full pointer-events-none z-0 filter blur-[120px]"
         style={{
-          background: accentColor === 'green' 
-            ? 'radial-gradient(circle, rgba(57, 255, 20, 0.07) 0%, transparent 70%)' 
-            : 'radial-gradient(circle, rgba(0, 212, 255, 0.07) 0%, transparent 70%)',
+          background: `radial-gradient(circle, ${getAccentRgba(accentColor, 0.07)} 0%, transparent 70%)`,
         }}
       />
 
-      {/* Secondary Cyan Glow Top-Right (Layer 2) */}
+      {/* Secondary Glow Top-Right (Layer 2) */}
       <div 
         className="absolute top-[10%] right-[20%] w-[45vw] aspect-square rounded-full pointer-events-none z-0 filter blur-[90px]"
         style={{
-          background: 'radial-gradient(circle, rgba(0, 212, 255, 0.05) 0%, transparent 65%)',
+          background: `radial-gradient(circle, ${getAccentRgba(accentColor, 0.05)} 0%, transparent 65%)`,
         }}
       />
 
@@ -454,8 +521,8 @@ export default function HeroSection({ accentColor, videoUrl, heroBgVideoUrl, ava
                 onMouseEnter={() => playClickSound('hover')}
                 className="px-8 py-3.5 text-[#050816] font-accent font-extrabold text-[9.5px] uppercase tracking-widest rounded-[4px] cursor-pointer transition-all duration-300 hover:brightness-105"
                 style={{
-                  backgroundColor: accentColor === 'green' ? '#2EC413' : '#00A8CC',
-                  boxShadow: accentColor === 'green' ? '0 0 12px rgba(46,196,19,0.2)' : '0 0 12px rgba(0,168,204,0.2)',
+                  backgroundColor: getSolidAccentColor(accentColor),
+                  boxShadow: `0 0 12px ${getAccentRgba(accentColor, 0.2)}`,
                   fontFamily: "'Syne', sans-serif"
                 }}
               >
@@ -469,13 +536,13 @@ export default function HeroSection({ accentColor, videoUrl, heroBgVideoUrl, ava
                 onMouseEnter={() => playClickSound('hover')}
                 className="px-8 py-3.5 bg-transparent border font-accent font-extrabold text-[9.5px] uppercase tracking-widest rounded-[4px] cursor-pointer transition-all duration-300 flex items-center justify-center gap-2 group"
                 style={{
-                  borderColor: accentColor === 'green' ? '#2EC413' : '#00A8CC',
-                  color: accentColor === 'green' ? '#2EC413' : '#00A8CC',
+                  borderColor: getSolidAccentColor(accentColor),
+                  color: getSolidAccentColor(accentColor),
                   backgroundColor: 'transparent',
                   fontFamily: "'Syne', sans-serif"
                 }}
                 onMouseOver={(e) => {
-                  e.currentTarget.style.backgroundColor = accentColor === 'green' ? 'rgba(46,196,19,0.08)' : 'rgba(0,168,204,0.08)';
+                  e.currentTarget.style.backgroundColor = `${getAccentRgba(accentColor, 0.08)}`;
                 }}
                 onMouseOut={(e) => {
                   e.currentTarget.style.backgroundColor = 'transparent';
@@ -512,36 +579,54 @@ export default function HeroSection({ accentColor, videoUrl, heroBgVideoUrl, ava
 
 
       {/* ─── MOBILE LAYOUT (md:hidden block) ─── */}
-      <div className="md:hidden flex flex-col items-center justify-start text-center px-6 pt-0 pb-36 min-h-screen relative z-10 space-y-0">
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="md:hidden flex flex-col items-center justify-start text-center px-6 pt-0 pb-36 min-h-screen relative z-10 space-y-0"
+      >
         
         {/* Identity label above the hero avatar with exactly 2rem margin top and bottom */}
-        <span className="font-mono text-[8px] tracking-[0.3em] text-[#8A9BC4] block font-black mt-8 mb-8">// IDENTITY</span>
+        <motion.span 
+          variants={itemVariants}
+          className="font-mono text-[8px] tracking-[0.3em] text-[#8A9BC4] block font-black mt-8 mb-8"
+        >
+          // IDENTITY
+        </motion.span>
 
         {/* Character image / Avatar above text (86vw width) with parallax scroll translation */}
-        <div 
+        <motion.div 
+          variants={itemVariants}
           className="relative w-[86vw] flex items-center justify-center overflow-hidden !mt-0 !mb-0"
-          style={{ transform: `translateY(${scrollY * 0.12}px)` }}
         >
-          {/* Central circular glow backdrop */}
-          <div className="absolute inset-0 m-auto w-[184px] h-[184px] rounded-full border border-[#39FF14]/15 bg-[#39FF14]/5 filter blur-md animate-pulse" />
-          
-          <img 
-            src={robotAvatar} 
-            alt="Airban Ikonicity Portrait" 
-            className="w-full h-auto object-contain z-10"
-            style={{
-              maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%)',
-              WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%)',
-              filter: 'drop-shadow(0 0 20px rgba(57, 255, 20, 0.15))'
-            }}
-          />
-        </div>
+          <div 
+            className="relative w-full flex items-center justify-center"
+            style={{ transform: `translateY(${scrollY * 0.12}px)` }}
+          >
+            {/* Central circular glow backdrop */}
+            <div className="absolute inset-0 m-auto w-[184px] h-[184px] rounded-full border border-[#39FF14]/15 bg-[#39FF14]/5 filter blur-md animate-pulse" />
+            
+            <img 
+              src={robotAvatar} 
+              alt="Airban Ikonicity Portrait" 
+              className="w-full h-auto object-contain z-10"
+              style={{
+                maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%)',
+                WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%)',
+                filter: 'drop-shadow(0 0 20px rgba(57, 255, 20, 0.15))'
+              }}
+            />
+          </div>
+        </motion.div>
 
         {/* Identity block directly below the character image with 0px top margin/padding */}
-        <div className="relative w-full space-y-4 px-2 !mt-0 !pt-0 flex flex-col items-center z-20">
+        <motion.div 
+          variants={itemVariants}
+          className="relative w-full space-y-4 px-2 !mt-0 !pt-0 flex flex-col items-center z-20"
+        >
           <p 
             className="font-accent font-extrabold text-[16.5px] uppercase tracking-widest -mt-10 pt-0"
-            style={{ color: accentColor === 'green' ? '#2EC413' : '#00A8CC' }}
+            style={{ color: getSolidAccentColor(accentColor) }}
           >
             Full-Stack Engineer
           </p>
@@ -555,7 +640,7 @@ export default function HeroSection({ accentColor, videoUrl, heroBgVideoUrl, ava
               onMouseEnter={() => playClickSound('hover')}
               className="w-full py-2.5 text-[#050816] font-accent font-extrabold text-[9.5px] uppercase tracking-widest rounded cursor-pointer"
               style={{
-                backgroundColor: accentColor === 'green' ? '#2EC413' : '#00A8CC',
+                backgroundColor: getSolidAccentColor(accentColor),
               }}
             >
               Explore My Work
@@ -567,8 +652,8 @@ export default function HeroSection({ accentColor, videoUrl, heroBgVideoUrl, ava
               onMouseEnter={() => playClickSound('hover')}
               className="w-full py-2.5 bg-transparent border text-[9.5px] font-accent font-extrabold uppercase tracking-widest rounded flex items-center justify-center gap-2 group cursor-pointer transition-all"
               style={{
-                borderColor: accentColor === 'green' ? '#2EC413' : '#00A8CC',
-                color: accentColor === 'green' ? '#2EC413' : '#00A8CC',
+                borderColor: getSolidAccentColor(accentColor),
+                color: getSolidAccentColor(accentColor),
               }}
             >
               <Download className="w-3.5 h-3.5 transition-transform group-hover:translate-y-0.5" />
@@ -611,10 +696,13 @@ export default function HeroSection({ accentColor, videoUrl, heroBgVideoUrl, ava
               )}
             </AnimatePresence>
           </div>
-        </div>
+        </motion.div>
 
         {/* Right Col stacks BELOW */}
-        <div className="w-full space-y-4 px-2 mt-4 pb-12">
+        <motion.div 
+          variants={itemVariants}
+          className="w-full space-y-4 px-2 mt-4 pb-12"
+        >
           <h2 className="text-white text-lg font-display font-black leading-tight uppercase">
             Building Intelligent <span className="text-[#39FF14]">Systems</span>
           </h2>
@@ -635,9 +723,9 @@ export default function HeroSection({ accentColor, videoUrl, heroBgVideoUrl, ava
               {availabilityStatus === 'busy' ? 'Busy building systems' : 'Available for work'}
             </span>
           </div>
-        </div>
+        </motion.div>
 
-      </div>
+      </motion.div>
 
 
       {/* 3. BOTTOM FLUSH OVERLAPPING STAT BAR */}
