@@ -8,7 +8,7 @@ import {
   Briefcase, 
   Cpu, 
   Award, 
-  MessageCircle, 
+  Star, 
   Send,
   Settings
 } from 'lucide-react';
@@ -59,7 +59,7 @@ export default function MobileFastScroller({ accentColor, onSettingsClick }: Mob
     { id: 'experience', label: 'CHRONICLES INDEX', shortLabel: 'CAREER', icon: Briefcase },
     { id: 'services', label: 'CAPABILITIES MAP', shortLabel: 'SERVICES', icon: Cpu },
     { id: 'certifications', label: 'SYSTEM CREDENTIALS', shortLabel: 'CERTS', icon: Award },
-    { id: 'testimonials', label: 'FEEDBACK RECORDS', shortLabel: 'REVIEWS', icon: MessageCircle },
+    { id: 'testimonials', label: 'FEEDBACK RECORDS', shortLabel: 'REVIEWS', icon: Star },
     { id: 'contact', label: 'CONTACT COCKPIT', shortLabel: 'CONTACT', icon: Send },
   ];
 

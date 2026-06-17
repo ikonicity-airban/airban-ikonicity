@@ -32,13 +32,17 @@ export default function CyberpunkParticles({ accentColor }: CyberpunkParticlesPr
     let width = canvas.width = canvas.offsetWidth;
     let height = canvas.height = canvas.offsetHeight;
 
-    // Detect parent resizes with ResizeObserver (Desktop and Mobile safe)
+    // Detect parent dynamic resizes with ResizeObserver (Desktop and Mobile safe)
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         if (entry.target === canvas.parentElement) {
-          width = canvas.width = entry.contentRect.width || canvas.offsetWidth;
-          height = canvas.height = entry.contentRect.height || canvas.offsetHeight;
-          initParticles();
+          const newW = entry.contentRect.width || canvas.offsetWidth;
+          const newH = entry.contentRect.height || canvas.offsetHeight;
+          if (newW !== width || newH !== height) {
+            width = canvas.width = newW;
+            height = canvas.height = newH;
+            initPhysics();
+          }
         }
       }
     });
@@ -47,54 +51,151 @@ export default function CyberpunkParticles({ accentColor }: CyberpunkParticlesPr
       resizeObserver.observe(canvas.parentElement);
     }
 
-    interface Particle {
+    interface CircuitNode {
+      id: number;
       x: number;
       y: number;
-      vx: number;
-      vy: number;
+      baseX: number;
+      baseY: number;
       size: number;
-      alpha: number;
-      char?: string;
+      glowIntensity: number;
       pulseSpeed: number;
-      pulseDir: number;
+      pulsePhase: number;
+      neighbors: number[]; // indices of connected nodes
     }
 
-    let particles: Particle[] = [];
-    const maxParticles = Math.min(60, Math.floor((width * height) / 18000));
+    interface Electron {
+      startX: number;
+      startY: number;
+      endX: number;
+      endY: number;
+      currentX: number;
+      currentY: number;
+      progress: number;
+      speed: number;
+      startNodeIndex: number;
+      endNodeIndex: number;
+      pathStyle: 'direct' | 'orthogonal'; // neural synapse (direct) vs integrated circuit (orthogonal/L-shaped)
+    }
 
-    const initParticles = () => {
-      particles = [];
-      const binaryChars = ['0', '1', '▢', '⏽', '▲', '◆'];
-      for (let i = 0; i < maxParticles; i++) {
-        // 20% of particles are cyber symbols
-        const isSymbol = Math.random() < 0.25;
-        particles.push({
-          x: Math.random() * width,
-          y: Math.random() * height,
-          vx: (Math.random() - 0.5) * 0.35,
-          vy: (Math.random() - 0.5) * 0.35,
-          size: isSymbol ? Math.random() * 4 + 6 : Math.random() * 1.5 + 1,
-          alpha: Math.random() * 0.4 + 0.1,
-          char: isSymbol ? binaryChars[Math.floor(Math.random() * binaryChars.length)] : undefined,
-          pulseSpeed: Math.random() * 0.01 + 0.005,
-          pulseDir: Math.random() > 0.5 ? 1 : -1,
+    let nodes: CircuitNode[] = [];
+    let electrons: Electron[] = [];
+
+    const initPhysics = () => {
+      nodes = [];
+      electrons = [];
+
+      // Scale density of elements based on screen size safely
+      const area = width * height;
+      const numNodes = Math.min(50, Math.max(16, Math.floor(area / 26000)));
+
+      // Step 1: Create nodes distributed across space
+      for (let i = 0; i < numNodes; i++) {
+        const x = Math.random() * width;
+        const y = Math.random() * height;
+        nodes.push({
+          id: i,
+          x: x,
+          y: y,
+          baseX: x,
+          baseY: y,
+          size: Math.random() * 1.8 + 1.2, // synaptic body size
+          glowIntensity: Math.random() * 0.4 + 0.35,
+          pulseSpeed: Math.random() * 0.02 + 0.008,
+          pulsePhase: Math.random() * Math.PI * 2,
+          neighbors: []
+        });
+      }
+
+      // Step 2: Establish connection graph (PCBs / synaptic paths)
+      for (let i = 0; i < nodes.length; i++) {
+        const n1 = nodes[i];
+        // Sort other nodes by distance
+        const distances = nodes
+          .map((n, idx) => ({ index: idx, dist: Math.hypot(n.x - n1.x, n.y - n1.y) }))
+          .filter(item => item.index !== i)
+          .sort((a, b) => a.dist - b.dist);
+
+        // Connect to nearest 2 or 3 nodes
+        const degree = Math.random() > 0.6 ? 3 : 2;
+        for (let d = 0; d < Math.min(degree, distances.length); d++) {
+          const nearestIdx = distances[d].index;
+          if (!n1.neighbors.includes(nearestIdx) && distances[d].dist < width * 0.28) {
+            n1.neighbors.push(nearestIdx);
+            // Bidirectional connection for clean mesh representation
+            if (!nodes[nearestIdx].neighbors.includes(i)) {
+              nodes[nearestIdx].neighbors.push(i);
+            }
+          }
+        }
+      }
+
+      // Step 3: Populate traveling electrons / impulses
+      const numElectrons = Math.min(22, Math.max(8, Math.floor(numNodes / 1.8)));
+      for (let i = 0; i < numElectrons; i++) {
+        spawnElectron();
+      }
+    };
+
+    const spawnElectron = (fromNodeIndex?: number) => {
+      if (nodes.length === 0) return;
+
+      const startIndex = fromNodeIndex !== undefined ? fromNodeIndex : Math.floor(Math.random() * nodes.length);
+      const startNode = nodes[startIndex];
+
+      if (startNode.neighbors.length === 0) {
+        // If node has no neighbors, choose random target node
+        const endIndex = Math.floor(Math.random() * nodes.length);
+        if (endIndex === startIndex) return;
+        const endNode = nodes[endIndex];
+        electrons.push({
+          startX: startNode.x,
+          startY: startNode.y,
+          endX: endNode.x,
+          endY: endNode.y,
+          currentX: startNode.x,
+          currentY: startNode.y,
+          progress: 0,
+          speed: Math.random() * 0.006 + 0.003,
+          startNodeIndex: startIndex,
+          endNodeIndex: endIndex,
+          pathStyle: Math.random() > 0.4 ? 'direct' : 'orthogonal'
+        });
+      } else {
+        // Choose one of its connected neighbors
+        const neighborIdx = startNode.neighbors[Math.floor(Math.random() * startNode.neighbors.length)];
+        const endNode = nodes[neighborIdx];
+        electrons.push({
+          startX: startNode.x,
+          startY: startNode.y,
+          endX: endNode.x,
+          endY: endNode.y,
+          currentX: startNode.x,
+          currentY: startNode.y,
+          progress: 0,
+          speed: Math.random() * 0.010 + 0.005,
+          startNodeIndex: startIndex,
+          endNodeIndex: neighborIdx,
+          pathStyle: Math.random() > 0.45 ? 'direct' : 'orthogonal'
         });
       }
     };
 
-    initParticles();
+    initPhysics();
 
     // Glitchy scanner line sweep attributes
     let scanY = 0;
-    const scanSpeed = 1.2;
+    const scanSpeed = 1.0;
 
     const render = () => {
       ctx.clearRect(0, 0, width, height);
 
-      // Draw subtle retro digital grid
-      ctx.strokeStyle = `rgba(${getRGB(accentColor)}, 0.015)`;
+      const rgbStr = getRGB(accentColor);
+
+      // --- Draw Subtle Silicon Grid Background ---
+      ctx.strokeStyle = `rgba(${rgbStr}, 0.012)`;
       ctx.lineWidth = 1;
-      const gridSize = 45;
+      const gridSize = 55;
       for (let x = 0; x < width; x += gridSize) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
@@ -108,78 +209,121 @@ export default function CyberpunkParticles({ accentColor }: CyberpunkParticlesPr
         ctx.stroke();
       }
 
-      // Draw Scanner Line
+      // --- Draw Space Scanner Sweep Line ---
       scanY += scanSpeed;
       if (scanY > height) scanY = 0;
-      const scanGradient = ctx.createLinearGradient(0, scanY - 60, 0, scanY);
-      scanGradient.addColorStop(0, `rgba(${getRGB(accentColor)}, 0)`);
-      scanGradient.addColorStop(0.5, `rgba(${getRGB(accentColor)}, 0.025)`);
-      scanGradient.addColorStop(1, `rgba(${getRGB(accentColor)}, 0)`);
+      const scanGradient = ctx.createLinearGradient(0, scanY - 80, 0, scanY);
+      scanGradient.addColorStop(0, `rgba(${rgbStr}, 0)`);
+      scanGradient.addColorStop(0.5, `rgba(${rgbStr}, 0.012)`);
+      scanGradient.addColorStop(1, `rgba(${rgbStr}, 0)`);
       ctx.fillStyle = scanGradient;
-      ctx.fillRect(0, scanY - 60, width, 60);
+      ctx.fillRect(0, scanY - 80, width, 80);
 
-      // Render & update particles
-      const rgbStr = getRGB(accentColor);
-      const hexStr = getAccentHex(accentColor);
-
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i];
-
-        // Slowly drift
-        p.x += p.vx;
-        p.y += p.vy;
-
-        // Wrap around boundaries
-        if (p.x < 0) p.x = width;
-        if (p.x > width) p.x = 0;
-        if (p.y < 0) p.y = height;
-        if (p.y > height) p.y = 0;
-
-        // Pulse alpha for "glowing network" feel
-        p.alpha += p.pulseSpeed * p.pulseDir;
-        if (p.alpha > 0.6) {
-          p.alpha = 0.6;
-          p.pulseDir = -1;
-        } else if (p.alpha < 0.08) {
-          p.alpha = 0.08;
-          p.pulseDir = 1;
-        }
-
-        ctx.fillStyle = `rgba(${rgbStr}, ${p.alpha})`;
-
-        if (p.char) {
-          // Draw alphanumeric or cyber graphic bit representation
-          ctx.font = `bold ${p.size}px "JetBrains Mono", monospace`;
-          ctx.fillText(p.char, p.x, p.y);
-        } else {
-          // Draw clean standard node dots
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Subtly larger glow
-          ctx.fillStyle = `rgba(${rgbStr}, ${p.alpha * 0.3})`;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        // Connect nearby particles (Plexus effect, suggesting high-density connectivity grid)
-        for (let j = i + 1; j < particles.length; j++) {
-          const p2 = particles[j];
-          const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
-          const maxDist = 95;
-
-          if (dist < maxDist) {
-            const lineAlpha = (1 - dist / maxDist) * 0.07 * Math.min(p.alpha, p2.alpha);
-            ctx.strokeStyle = `rgba(${rgbStr}, ${lineAlpha})`;
-            ctx.lineWidth = 0.75;
+      // --- Draw Connective Tracks (Conducting Pathways / Synaptic Links) ---
+      ctx.lineWidth = 0.8;
+      nodes.forEach(n => {
+        n.neighbors.forEach(neighborIdx => {
+          const neighbor = nodes[neighborIdx];
+          if (neighbor.id > n.id) { // Draw once per unique pair
             ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p2.x, p2.y);
+            ctx.moveTo(n.x, n.y);
+            ctx.strokeStyle = `rgba(${rgbStr}, 0.045)`;
+            ctx.lineTo(neighbor.x, neighbor.y);
             ctx.stroke();
           }
+        });
+      });
+
+      // --- Update & Draw Nodes (Synapses / Circuit Gates) ---
+      nodes.forEach(n => {
+        // Slow organic brownian drift
+        n.pulsePhase += n.pulseSpeed;
+        const driftX = Math.sin(n.pulsePhase) * 1.5;
+        const driftY = Math.cos(n.pulsePhase * 0.8) * 1.5;
+        n.x = n.baseX + driftX;
+        n.y = n.baseY + driftY;
+
+        // Oscillate brightness slightly
+        const currentGlow = n.glowIntensity + Math.sin(n.pulsePhase * 1.8) * 0.12;
+        
+        ctx.fillStyle = `rgba(${rgbStr}, ${currentGlow})`;
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Node surrounding halo
+        ctx.fillStyle = `rgba(${rgbStr}, ${currentGlow * 0.22})`;
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.size * 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // --- Update & Draw Electron Currents (Traveling Wave impulses) ---
+      const activeElectrons: Electron[] = [];
+
+      electrons.forEach(e => {
+        e.progress += e.speed;
+
+        // Keep starting/ending vectors dynamic to correspond with flowing nodes
+        const startNode = nodes[e.startNodeIndex];
+        const endNode = nodes[e.endNodeIndex];
+
+        if (startNode && endNode) {
+          e.startX = startNode.x;
+          e.startY = startNode.y;
+          e.endX = endNode.x;
+          e.endY = endNode.y;
         }
+
+        // Calculate current coordinates based on layout style
+        if (e.pathStyle === 'orthogonal') {
+          // Orthogonal PCB trace (horizontal then vertical step path)
+          const midX = e.startX + (e.endX - e.startX) * 0.5;
+          if (e.progress < 0.5) {
+            const pNorm = e.progress / 0.5;
+            e.currentX = e.startX + (midX - e.startX) * pNorm;
+            e.currentY = e.startY;
+          } else {
+            const pNorm = (e.progress - 0.5) / 0.5;
+            e.currentX = midX;
+            e.currentY = e.startY + (e.endY - e.startY) * pNorm;
+          }
+        } else {
+          // Direct straight synaptic connection path
+          e.currentX = e.startX + (e.endX - e.startX) * e.progress;
+          e.currentY = e.startY + (e.endY - e.startY) * e.progress;
+        }
+
+        // Draw electron energy head
+        ctx.fillStyle = `rgba(${rgbStr}, 0.88)`;
+        ctx.beginPath();
+        ctx.arc(e.currentX, e.currentY, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Electron outer glow dispersion
+        ctx.fillStyle = `rgba(${rgbStr}, 0.24)`;
+        ctx.beginPath();
+        ctx.arc(e.currentX, e.currentY, 5.0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Keep or complete electron trajectory
+        if (e.progress < 1) {
+          activeElectrons.push(e);
+        } else {
+          // Signal reached terminal node - pulse glow to indicate electrical handshake
+          if (endNode) {
+            endNode.glowIntensity = Math.min(1.0, endNode.glowIntensity + 0.32);
+          }
+          // Propagate the impulse onwards
+          spawnElectron(e.endNodeIndex);
+        }
+      });
+
+      electrons = activeElectrons;
+
+      // Maintain electron populations nicely
+      while (electrons.length < Math.min(12, Math.floor(nodes.length / 2.2))) {
+        spawnElectron();
       }
 
       animationFrameId = requestAnimationFrame(render);
@@ -194,9 +338,21 @@ export default function CyberpunkParticles({ accentColor }: CyberpunkParticlesPr
   }, [accentColor]);
 
   return (
-    <canvas 
-      ref={canvasRef} 
-      className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-[0.45]"
-    />
+    <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden z-0 bg-[#050816]">
+      {/* Dynamic Electron-Neuron Circuit Canvas with delicate hardware feel and hardware-accelerated subtle blur */}
+      <canvas 
+        ref={canvasRef} 
+        style={{ filter: 'blur(1.2px)' }}
+        className="absolute inset-0 w-full h-full opacity-[0.45]"
+      />
+      
+      {/* Vignette Overlay & Darkening Backdrop to guarantee incredible contrast for text content */}
+      <div 
+        className="absolute inset-0 bg-gradient-to-b from-[#050816]/75 via-transparent to-[#050816]/80 mix-blend-multiply" 
+      />
+      <div 
+        className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,#050816_90%)]"
+      />
+    </div>
   );
 }

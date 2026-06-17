@@ -272,7 +272,8 @@ export default function HeroSection({ accentColor, videoUrl, heroBgVideoUrl, ava
       className="relative z-30 min-h-screen w-full bg-[#050816] overflow-visible flex flex-col justify-between"
       style={{ contentVisibility: 'auto' }}
     >
-      {/* 1. LOOPABLE BACKGROUND VIDEO BACKDROP */}
+      {/* 1. LOOPABLE BACKGROUND VIDEO BACKDROP - OMITTED FOR NOW TO PREVENT DEVICE CRASHES AND ENSURE ULTRA-SMOOTH CANVAS PERFORMANCE */}
+      {/* 
       {currentBgVideo && (
         <video
           ref={bgVideoRef}
@@ -280,12 +281,13 @@ export default function HeroSection({ accentColor, videoUrl, heroBgVideoUrl, ava
           src={currentBgVideo}
           autoPlay
           loop
-          muted // Statically declare muted for guaranteed cross-browser and mobile Safari autoplay
+          muted 
           playsInline
           onError={handleVideoError}
           className="absolute inset-0 w-full h-full object-cover z-0 opacity-60 pointer-events-none"
         />
       )}
+      */}
 
       {/* ─── GRAND HERO HEADER BACKDROP TEXT WITH SCROLL PARALLAX ─── */}
       <div 
