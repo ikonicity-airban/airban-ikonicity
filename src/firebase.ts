@@ -11,16 +11,47 @@ import {
   setDoc, 
   query, 
   orderBy, 
-  onSnapshot 
+  onSnapshot,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  setLogLevel,
+  getFirestore
 } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 import { portfolioData } from './data';
 
-// Initialize Firebase
+// Initialize Firebase App
 const app = initializeApp(firebaseConfig);
-export const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true,
-}, firebaseConfig.firestoreDatabaseId);
+
+// Silence verbose connection warnings from printing to console log
+try {
+  setLogLevel('error');
+} catch (e) {
+  console.warn('[Firebase-SafeNet] Could not adjust Firestore log level:', e);
+}
+
+// Initialize Firestore with robust local caching & automatic tab sync
+let initialDbInstance;
+try {
+  initialDbInstance = initializeFirestore(app, {
+    experimentalForceLongPolling: true,
+    localCache: persistentLocalCache({
+      tabManager: persistentMultipleTabManager(),
+    }),
+  }, firebaseConfig.firestoreDatabaseId);
+} catch (cacheError) {
+  console.warn('[Firebase-SafeNet] IndexedDB cache not supported/allowed in this iframe/adblocker environment, falling back to standard memory representation:', cacheError);
+  try {
+    initialDbInstance = initializeFirestore(app, {
+      experimentalForceLongPolling: true,
+    }, firebaseConfig.firestoreDatabaseId);
+  } catch (fallbackError) {
+    console.error('[Firebase-SafeNet] Crucial Firestore initialization failure:', fallbackError);
+    initialDbInstance = getFirestore(app);
+  }
+}
+
+export const db = initialDbInstance;
 export const auth = getAuth();
 export const googleProvider = new GoogleAuthProvider();
 
@@ -90,12 +121,43 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 
 // Pre-packaged Seed Database Helper
 export async function seedDatabaseIfEmpty() {
+  let isOfflineOrTimeout = false;
+
+  // Timeout wrapper helper to bypass long-hanging connection checks on cold connections
+  const runWithTimeout = async <T>(promise: Promise<T>, timeoutMs: number, fallback: T): Promise<T> => {
+    let timeoutId: any;
+    const timeoutPromise = new Promise<T>((resolve) => {
+      timeoutId = setTimeout(() => {
+        isOfflineOrTimeout = true;
+        resolve(fallback);
+      }, timeoutMs);
+    });
+    try {
+      return await Promise.race([promise, timeoutPromise]);
+    } catch (e) {
+      isOfflineOrTimeout = true;
+      return fallback;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  };
+
   try {
     const user = auth.currentUser;
     const isAuthorizedAdmin = user && user.email === 'ikonicityairban@gmail.com';
 
     // 1. Projects seed check
-    const projectSnap = await getDocs(collection(db, 'projects'));
+    const projectSnap = await runWithTimeout(
+      getDocs(collection(db, 'projects')),
+      1800,
+      null
+    );
+
+    if (isOfflineOrTimeout || !projectSnap) {
+      console.log('[Firebase-SafeNet] Seeding connection check bypassed / offline. Relying on local cached state.');
+      return;
+    }
+
     if (projectSnap.empty) {
       if (!isAuthorizedAdmin) {
         console.log('// Firestore projects collection is currently vacant. Log in via Cockpit to authorize automatic seeding.');
@@ -121,13 +183,20 @@ export async function seedDatabaseIfEmpty() {
             isVisible: true,
             order: index++
           };
-          await setDoc(doc(db, 'projects', docId), docData);
+          await runWithTimeout(setDoc(doc(db, 'projects', docId), docData), 1000, undefined);
         }
       }
     }
 
     // 2. Testimonials seed check
-    const testimonialSnap = await getDocs(collection(db, 'testimonials'));
+    const testimonialSnap = await runWithTimeout(
+      getDocs(collection(db, 'testimonials')),
+      1200,
+      null
+    );
+
+    if (isOfflineOrTimeout || !testimonialSnap) return;
+
     if (testimonialSnap.empty) {
       if (!isAuthorizedAdmin) {
         console.log('// Firestore testimonials collection is currently vacant. Log in via Cockpit to authorize automatic seeding.');
@@ -155,29 +224,44 @@ export async function seedDatabaseIfEmpty() {
           }
         ];
         for (let i = 0; i < initialTestimonials.length; i++) {
-          await addDoc(collection(db, 'testimonials'), {
-            ...initialTestimonials[i],
-            order: i
-          });
+          await runWithTimeout(
+            addDoc(collection(db, 'testimonials'), {
+              ...initialTestimonials[i],
+              order: i
+            }),
+            1000,
+            undefined
+          );
         }
       }
     }
 
     // 3. Availability seed check
-    const availabilitySnap = await getDocs(collection(db, 'availability'));
+    const availabilitySnap = await runWithTimeout(
+      getDocs(collection(db, 'availability')),
+      1200,
+      null
+    );
+
+    if (isOfflineOrTimeout || !availabilitySnap) return;
+
     if (availabilitySnap.empty) {
       if (!isAuthorizedAdmin) {
         console.log('// Firestore availability check is vacant. Log in via Cockpit to authorize automatic seeding.');
       } else {
         console.log('// Seeding availability configuration...');
-        await setDoc(doc(db, 'availability', 'global'), {
-          status: 'available',
-          message: 'Currently building Geek Creations & open to freelance consultation',
-          updatedAt: new Date().toISOString()
-        });
+        await runWithTimeout(
+          setDoc(doc(db, 'availability', 'global'), {
+            status: 'available',
+            message: 'Currently building Geek Creations & open to freelance consultation',
+            updatedAt: new Date().toISOString()
+          }),
+          1000,
+          undefined
+        );
       }
     }
   } catch (error) {
-    console.error('Seeding error:', error);
+    console.error('Seeding error (safely caught):', error);
   }
 }

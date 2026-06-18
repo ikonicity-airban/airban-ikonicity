@@ -142,6 +142,7 @@ export default function CVModal({ isOpen, onClose, accentColor }: CVModalProps) 
     const stylesheets = Array.from(document.querySelectorAll('style'));
     const originalContents = stylesheets.map(style => style.textContent || '');
     const originalFetch = window.fetch;
+    let fetchOverridden = false;
     
     try {
       const { default: html2canvas } = await import('html2canvas');
@@ -217,26 +218,42 @@ export default function CVModal({ isOpen, onClose, accentColor }: CVModalProps) 
       };
 
       // Override window.fetch to capture CSS files fetched by html2canvas and sanitize any oklch() color codes
-      window.fetch = async (input, init) => {
-        const url = typeof input === 'string' ? input : (input && (input as Request).url) ? (input as Request).url : '';
-        if (url && (url.includes('.css') || url.endsWith('.css') || url.includes('/assets/'))) {
-          try {
-            const response = await originalFetch(input, init);
-            if (response.ok) {
-              const originalText = await response.text();
-              const processedText = processOklchText(originalText);
-              return new Response(processedText, {
-                status: response.status,
-                statusText: response.statusText,
-                headers: response.headers
-              });
+      try {
+        const customFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+          const url = typeof input === 'string' ? input : (input && (input as Request).url) ? (input as Request).url : '';
+          if (url && (url.includes('.css') || url.endsWith('.css') || url.includes('/assets/'))) {
+            try {
+              const response = await originalFetch(input, init);
+              if (response.ok) {
+                const originalText = await response.text();
+                const processedText = processOklchText(originalText);
+                return new Response(processedText, {
+                  status: response.status,
+                  statusText: response.statusText,
+                  headers: response.headers
+                });
+              }
+            } catch (err) {
+              console.warn('Failed to intercept and sanitize color function inside fetch style asset:', url, err);
             }
-          } catch (err) {
-            console.warn('Failed to intercept and sanitize color function inside fetch style asset:', url, err);
           }
+          return originalFetch(input, init);
+        };
+
+        try {
+          Object.defineProperty(window, 'fetch', {
+            value: customFetch,
+            configurable: true,
+            writable: true
+          });
+          fetchOverridden = true;
+        } catch (e1) {
+          window.fetch = customFetch;
+          fetchOverridden = true;
         }
-        return originalFetch(input, init);
-      };
+      } catch (err) {
+        console.warn('Cannot override window.fetch in this environment, bypassing stylesheet fetch interception:', err);
+      }
 
       stylesheets.forEach(style => {
         if (style.textContent && style.textContent.toLowerCase().includes('oklch')) {
@@ -314,7 +331,19 @@ export default function CVModal({ isOpen, onClose, accentColor }: CVModalProps) 
       console.error('High fidelity PDF compilation encountered an issue. Falling back to synthetic export:', err);
       handleDownloadCV(); // fallback to standard fast synthetic downloader
     } finally {
-      window.fetch = originalFetch;
+      if (fetchOverridden) {
+        try {
+          Object.defineProperty(window, 'fetch', {
+            value: originalFetch,
+            configurable: true,
+            writable: true
+          });
+        } catch (e) {
+          try {
+            window.fetch = originalFetch;
+          } catch (e2) {}
+        }
+      }
       // ALWAYS restore original stylesheets to prevent affecting main portfolio rendering
       stylesheets.forEach((style, idx) => {
         if (originalContents[idx] !== undefined) {

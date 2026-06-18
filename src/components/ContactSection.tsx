@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Send, Mail, Phone, MapPin, Loader2, Check, AlertCircle, Github, Linkedin, Twitter, MessageSquare, Compass } from 'lucide-react';
 import { db } from '../firebase';
 import { collection, addDoc } from 'firebase/firestore';
+import Logo from './Logo';
 
 import { getAccentHex, getAccentTextClass, getAccentBgClass, getAccentBorderClass, getAccentRgba } from '../utils';
 
@@ -433,6 +434,11 @@ export default function ContactSection({ accentColor }: ContactSectionProps) {
           {/* RIGHT COLUMN: INFO PANEL (40% i.e. 5/12 cols on lg, order-1 on mobile so it displays above form) */}
           <div className="order-1 lg:order-2 lg:col-span-5 space-y-8 text-left">
             
+            {/* Custom high-fidelity brand Logo showcase */}
+            <div className="flex flex-col items-start gap-4 p-5 rounded-xl bg-[#080D1F] border border-white/5 shadow-xl">
+              <Logo size={70} showText={true} glow={true} accentColor={accentColor} />
+            </div>
+
             {/* Availability Status Card */}
             <div 
               className="p-6 rounded-xl border border-l-4 bg-[#080D1F] border-[#1A2544] space-y-4 mb-4 lg:mb-0"

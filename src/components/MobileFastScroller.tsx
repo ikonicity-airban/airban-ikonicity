@@ -222,7 +222,7 @@ export default function MobileFastScroller({ accentColor, onSettingsClick }: Mob
           const Icon = item.icon;
           
           if (item.id === 'settings') {
-            const isVisible = scrollY === 0;
+            const isScrolled = scrollY > 0;
             return (
               <button
                 key={item.id}
@@ -231,7 +231,7 @@ export default function MobileFastScroller({ accentColor, onSettingsClick }: Mob
                   onSettingsClick?.();
                 }}
                 className={`relative flex items-center justify-center w-6 h-6 rounded-full transition-all duration-300 focus:outline-none cursor-pointer z-10 ${
-                  isVisible ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-75 pointer-events-none'
+                  isScrolled ? 'opacity-70 hover:opacity-100 scale-100 pointer-events-auto' : 'opacity-100 scale-110 pointer-events-auto'
                 }`}
                 style={{
                   backgroundColor: 'transparent'
@@ -242,24 +242,12 @@ export default function MobileFastScroller({ accentColor, onSettingsClick }: Mob
             );
           }
 
-          let iconClass = "w-3.5 h-3.5 transition-all duration-300 ";
+          let iconClass = "w-3.5 h-3.5 transition-all duration-300 z-10 ";
           let iconStyle = {};
           
           if (active) {
-            iconClass += `${textAccentClass} scale-110`;
-            const getDropShadowByColor = (color: typeof accentColor) => {
-              switch (color) {
-                case 'green': return 'drop-shadow(0 0 8px rgba(57,255,20,0.5))';
-                case 'cyan': return 'drop-shadow(0 0 8px rgba(0,212,255,0.5))';
-                case 'pink': return 'drop-shadow(0 0 8px rgba(255,0,127,0.5))';
-                case 'purple': return 'drop-shadow(0 0 8px rgba(189,0,255,0.5))';
-                case 'yellow': return 'drop-shadow(0 0 8px rgba(255,230,0,0.5))';
-                default: return 'drop-shadow(0 0 8px rgba(57,255,20,0.5))';
-              }
-            };
-            iconStyle = {
-              filter: getDropShadowByColor(accentColor)
-            };
+            iconClass += "text-black scale-110";
+            iconStyle = { color: '#000000' };
           } else if (scrolledPast) {
             iconClass += "scale-100";
             iconStyle = { color: '#aaaaaa' };
@@ -275,25 +263,25 @@ export default function MobileFastScroller({ accentColor, onSettingsClick }: Mob
               }}
               className="relative flex items-center justify-center w-6 h-6 rounded-full transition-all duration-300 focus:outline-none cursor-pointer z-10"
               style={{
-                backgroundColor: active ? `${themeColor}12` : 'transparent'
+                backgroundColor: 'transparent'
               }}
             >
+              {/* Dynamic sliding system active pill layer */}
+              {active && (
+                <motion.div
+                  layoutId="activePill"
+                  className="absolute inset-0 rounded-full z-0 pointer-events-none"
+                  style={{ backgroundColor: themeColor, opacity: 0.8 }}
+                  transition={{ type: 'spring', stiffness: 380, damping: 25 }}
+                />
+              )}
+
               <Icon 
                 className={iconClass}
                 style={iconStyle}
-                strokeWidth={active ? 1.5 : 2}
-                fill={active ? "currentColor" : "none"}
+                strokeWidth={2}
+                fill="none"
               />
-
-              {/* Dynamic scroll indicator outline */}
-              {active && (
-                <motion.div
-                  layoutId="activeCircleOutline"
-                  className="absolute inset-0 rounded-full border"
-                  style={{ borderColor: themeColor }}
-                  transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-                />
-              )}
             </button>
           );
         })}

@@ -34,17 +34,20 @@ export default function CyberpunkParticles({ accentColor }: CyberpunkParticlesPr
 
     // Detect parent dynamic resizes with ResizeObserver (Desktop and Mobile safe)
     const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.target === canvas.parentElement) {
-          const newW = entry.contentRect.width || canvas.offsetWidth;
-          const newH = entry.contentRect.height || canvas.offsetHeight;
-          if (newW !== width || newH !== height) {
-            width = canvas.width = newW;
-            height = canvas.height = newH;
-            initPhysics();
+      window.requestAnimationFrame(() => {
+        if (!canvas) return;
+        for (const entry of entries) {
+          if (entry.target === canvas.parentElement) {
+            const newW = entry.contentRect.width || canvas.offsetWidth;
+            const newH = entry.contentRect.height || canvas.offsetHeight;
+            if (newW !== width || newH !== height) {
+              width = canvas.width = newW;
+              height = canvas.height = newH;
+              initPhysics();
+            }
           }
         }
-      }
+      });
     });
 
     if (canvas.parentElement) {

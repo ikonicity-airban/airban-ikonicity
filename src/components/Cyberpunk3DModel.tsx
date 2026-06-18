@@ -289,11 +289,13 @@ export default function Cyberpunk3DModel({ accentColor }: Cyberpunk3DModelProps)
 
     // RESIZE OBSERVER
     const resizeObserver = new ResizeObserver((entries) => {
-      if (!entries || entries.length === 0) return;
-      const { width: newWidth, height: newHeight } = entries[0].contentRect;
-      camera.aspect = newWidth / newHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(newWidth, newHeight, false);
+      window.requestAnimationFrame(() => {
+        if (!entries || entries.length === 0) return;
+        const { width: newWidth, height: newHeight } = entries[0].contentRect;
+        camera.aspect = newWidth / newHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(newWidth, newHeight, false);
+      });
     });
 
     resizeObserver.observe(containerRef.current);
