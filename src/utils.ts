@@ -4,9 +4,10 @@ import { AccentColor } from './types';
  * Shared Dynamic Utilities for Airban Ikonicity Portfolio
  */
 
-/**
- * Web Audio API synthesizer for clean futuristic tactile feedback sounds
- */
+// Web Audio API synthesizer for clean futuristic tactile feedback sounds
+// Store a single shared AudioContext to prevent browser thread saturation and crash
+let sharedAudioCtx: AudioContext | null = null;
+
 export const playClickSound = (type: 'click' | 'success' | 'synth' | 'hover' = 'click') => {
   if (typeof window === 'undefined') return;
   
@@ -17,7 +18,16 @@ export const playClickSound = (type: 'click' | 'success' | 'synth' | 'hover' = '
   try {
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
+    
+    if (!sharedAudioCtx) {
+      sharedAudioCtx = new AudioContextClass();
+    }
+    const ctx = sharedAudioCtx;
+    
+    // Resume context if suspended (browser security policy requires user interaction)
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
 
     if (type === 'hover') {
       // Very soft, high-frequency elegant tactile hover tick

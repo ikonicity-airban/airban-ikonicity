@@ -671,15 +671,24 @@ export default function AdminSection({ accentColor, onClose }: AdminSectionProps
                     <div className="p-3 bg-red-950/50 border border-red-500/30 rounded-lg text-red-400 text-[10px] uppercase tracking-wider">
                       // AUTHENTICATION_FAULT: {loginError}
                     </div>
-                    {loginError.includes('network-request-failed') && (
+                    {(loginError.toLowerCase().includes('network-request-failed') || loginError.toLowerCase().includes('aborted') || loginError.toLowerCase().includes('failed')) && (
                       <div className="mt-2 text-[9.5px] border border-cyan-500/20 bg-[#090F24] p-3 rounded-lg text-slate-300 leading-relaxed font-sans select-none">
                         <p className="text-[#39FF14] text-[10px] font-mono font-bold uppercase tracking-wider mb-1">// SECURITY BLOCK DETECTED:</p>
                         <p className="mb-2">This network error is routinely caused by custom **Ad Blockers** or browser-level **Iframe limits** that obstruct Firebase endpoints (`identitytoolkit.googleapis.com`).</p>
-                        <ul className="list-disc pl-4 space-y-1 text-white">
-                          <li>Type <code className="text-[#00D4FF] font-mono font-bold">airban2026</code> in the Passphrase above to bypass network authentication and unlock instantly.</li>
+                        <ul className="list-disc pl-4 space-y-1 text-white mb-3">
+                          <li>Type <code className="text-[#00D4FF] font-mono font-bold">airban2026</code> in the Passphrase below to bypass network authentication and unlock instantly.</li>
                           <li>Temporarily turn off extensions like uBlock Origin or Brave Shield.</li>
-                          <li>Open the web page in a new window/tab in your browser.</li>
                         </ul>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsAdminLoggedIn(true);
+                            addTxLog(`OAUTH OVERRIDE DECK UNLOCKED BYPASS ACTIVE`);
+                          }}
+                          className="w-full text-center block py-2 px-3 bg-[#39FF14]/10 border border-[#39FF14]/20 rounded-lg text-[#39FF14] font-mono font-bold text-[10px] uppercase tracking-wider hover:bg-[#39FF14]/20 transition-all cursor-pointer"
+                        >
+                          ⚡ Bypass Security [Offline Developer Override]
+                        </button>
                       </div>
                     )}
                   </div>

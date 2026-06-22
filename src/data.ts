@@ -136,7 +136,7 @@ export const portfolioData = {
       id: "geek-creations",
       title: "Geek Creations",
       subtitle: "Nigerian Print-on-Demand platform with global reach.",
-      tag: "Founder · Full-Stack · E-Commerce",
+      tag: "Lead Developer · Full-Stack · E-Commerce",
       description: "A Shopify-powered customization platform that lets users design and order branded merchandise — apparel, cups, caps, and more — through an online editor. Accepts fiat, card, and cryptocurrency payments, enabling both local delivery across Nigeria and international orders.",
       status: "🟡 Active Development (Phase 2)",
       logoText: "GC",

@@ -55,42 +55,42 @@ function RoadMilestoneCard({
   const isEven = index % 2 === 0;
   const center = 0.05 + index * step;
   
-  // Calculate raw Z depth: starts close (positive z), is beautifully in focus (z=0), and slowly moves farther away into deep background (negative z)
+  // Calculate raw Z depth: starts deep in the background (negative z, inside screen), flies closer (value increases), and rushes past camera lens (positive z)
   const z = useTransform(
     scrollYProgress,
     sanitizeInputRange([
       center - 0.45 * step,
-      center - 0.25 * step,
-      center + 0.1 * step,
-      center + 0.35 * step
+      center - 0.15 * step,
+      center + 0.15 * step,
+      center + 0.45 * step
     ]),
-    [320, 100, -180, -1500],
+    [-1200, -200, 400, 1500],
     { clamp: true }
   );
 
-  // Set precise fade timing: starts invisible, quickly fades in as it appears full-width, remains full opacity while scrolling active zone, and fades out as it dissolves deep in the background
+  // Set precise fade timing: starts invisible at horizon, fades in as it approaches focus, remains opaque, then fades out as it blows past the camera lens
   const opacity = useTransform(
     scrollYProgress,
     sanitizeInputRange([
       center - 0.45 * step,
       center - 0.25 * step,
-      center + 0.1 * step,
-      center + 0.35 * step
+      center + 0.15 * step,
+      center + 0.42 * step
     ]),
     [0.0, 1.0, 1.0, 0.0],
     { clamp: true }
   );
 
-  // Discrete structural scale transformation: appearing full size at first (1.0), and shrinking down as it recedes (0.15)
+  // Discrete structural scale transformation: starts very small (0.15) inside the screen, grows to 1.0 in focus, and expands up to 2.5 (250%) as it passes
   const scale = useTransform(
     scrollYProgress,
     sanitizeInputRange([
       center - 0.45 * step,
-      center - 0.25 * step,
-      center + 0.1 * step,
-      center + 0.35 * step
+      center - 0.15 * step,
+      center + 0.20 * step,
+      center + 0.45 * step
     ]),
-    [0.75, 1.0, 0.75, 0.15],
+    [0.15, 1.0, 1.6, 2.5],
     { clamp: true }
   );
 
@@ -103,6 +103,18 @@ function RoadMilestoneCard({
   );
 
   const yVal = isMobile ? -50 : -80; // Sit cleanly above the rotated grid plane
+  
+  // Dynamic y position to simulate camera perspective descending under the viewport
+  // Ratio is exactly 10:1 relative to z-axis intervals:
+  // -1200 to -200 (delta 1000) -> y changes by +100
+  // -200 to 400 (delta 600) -> y changes by +60
+  // 400 to 1500 (delta 1100) -> y changes by +110
+  const y = useTransform(
+    z,
+    [-1200, -200, 400, 1500],
+    [yVal - 100, yVal, yVal + 60, yVal + 170]
+  );
+
   const primaryAccentHex = getAccentHex(accentColor);
   
   return (
@@ -111,7 +123,7 @@ function RoadMilestoneCard({
         opacity,
         scale,
         x,
-        y: yVal,
+        y,
         z,
         transformStyle: 'preserve-3d',
       }}
@@ -189,6 +201,7 @@ export default function AboutSection({ accentColor }: AboutSectionProps) {
   }, [activePillar]);
 
   const pillarsRef = useRef<HTMLDivElement>(null);
+  const speedRef = useRef<HTMLSpanElement>(null);
   const { scrollYProgress: pillarScroll } = useScroll({
     target: pillarsRef,
     offset: ["start end", "end start"]
@@ -212,7 +225,6 @@ export default function AboutSection({ accentColor }: AboutSectionProps) {
   const roadBgY = useTransform(roadScrollYProgress, [0, 1], ["0px", "-2400px"]);
 
   const [activeCardIndex, setActiveCardIndex] = useState(0);
-  const [scrollingSpeed, setScrollingSpeed] = useState(120);
 
   const N = portfolioData.timelineData.length;
   const step = 0.90 / (N - 1);
@@ -233,10 +245,11 @@ export default function AboutSection({ accentColor }: AboutSectionProps) {
     }
   });
 
-  // Dynamic Speedometer scroll tracker
+  // Dynamic Speedometer scroll tracker - ultra-optimized with direct DOM ref updates
   useEffect(() => {
     let lastPos = window.scrollY;
     let lastT = Date.now();
+    let currentSpeed = 120;
     
     const handleScroll = () => {
       const currPos = window.scrollY;
@@ -247,9 +260,10 @@ export default function AboutSection({ accentColor }: AboutSectionProps) {
       const velocity = dp / dt;
       const targetSpeed = Math.min(280, 120 + Math.floor(velocity * 90));
       
-      setScrollingSpeed(prev => {
-        return Math.floor(prev + (targetSpeed - prev) * 0.15);
-      });
+      currentSpeed = Math.floor(currentSpeed + (targetSpeed - currentSpeed) * 0.15);
+      if (speedRef.current) {
+        speedRef.current.textContent = String(currentSpeed);
+      }
       
       lastPos = currPos;
       lastT = currT;
@@ -258,17 +272,19 @@ export default function AboutSection({ accentColor }: AboutSectionProps) {
     window.addEventListener('scroll', handleScroll, { passive: true });
     
     const decay = setInterval(() => {
-      setScrollingSpeed(prev => {
-        if (prev > 120) return Math.max(120, prev - 4);
-        return 120;
-      });
+      if (currentSpeed > 120) {
+        currentSpeed = Math.max(120, currentSpeed - 4);
+        if (speedRef.current) {
+          speedRef.current.textContent = String(currentSpeed);
+        }
+      }
     }, 100);
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
       clearInterval(decay);
     };
-  }, [scrollingSpeed]);
+  }, []);
 
   // Map vertical scroll of the philosophies card container to horizontal translation (right to left)
   const xTrack = useTransform(pillarScroll, [0, 0.85], [120, -360]);
@@ -488,8 +504,8 @@ export default function AboutSection({ accentColor }: AboutSectionProps) {
         {/* Row 2: Symmetric Bento Row */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
           
-          {/* Card 1: Lagos-Nsukka Link / Location Radar */}
-          <div className="relative w-full aspect-video md:aspect-auto md:h-full min-h-[190px] rounded-2xl bg-[#0a0f26] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.85),inset_0_1px_3px_rgba(255,255,255,0.12)] flex flex-col justify-between p-6 overflow-hidden transition-all hover:border-white/20">
+          {/* Card 1: Daily Capability, Operational Excellence / Radar */}
+          <div className="relative w-full aspect-video md:aspect-auto md:h-full min-h-[190px] rounded-2xl bg-gradient-to-br from-[#0c1435] via-[#080d21] to-[#040816] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.85),inset_0_1px_3px_rgba(255,255,255,0.12)] flex flex-col justify-between p-6 overflow-hidden transition-all hover:border-white/20">
             <div 
               className="absolute inset-0 pointer-events-none" 
               style={{ backgroundColor: `${getAccentHex(accentColor)}03` }}
@@ -499,7 +515,7 @@ export default function AboutSection({ accentColor }: AboutSectionProps) {
                 className="w-1.5 h-1.5 rounded-full animate-ping" 
                 style={{ backgroundColor: getAccentHex(accentColor) }}
               />
-              LAGOS_NSUKKA_LINK: ACTIVE
+              DAILY CAPABILITY // SYSTEMS
             </div>
             
             <svg 
@@ -514,10 +530,10 @@ export default function AboutSection({ accentColor }: AboutSectionProps) {
               <line x1="100" y1="100" x2="160" y2="40" stroke="currentColor" strokeWidth="1.5" className="origin-center animate-[spin_4s_linear_infinite]" />
             </svg>
             
-            <div className="text-left font-mono text-[9px] text-[#8A9BC4] space-y-1 w-full relative z-10 pl-1 mt-6">
-              <span className="block text-white font-bold tracking-widest uppercase text-[10.5px]">SOLVE COMPLEX ISSUES</span>
-              <span className="block text-[10px] text-white mt-1.5 select-none leading-relaxed">
-                "Solve the complex problems no one wants to face. Then teach others how."
+            <div className="text-left font-mono text-[9px] text-[#8A9BC4] space-y-1.5 w-full relative z-10 pl-1 mt-6">
+              <span className="block text-white font-bold tracking-widest uppercase text-[10.5px]">OPERATIONAL EXCELLENCE</span>
+              <span className="block text-[10px] text-white mt-1.5 select-none leading-relaxed font-sans">
+                Mastering the core **know-how** of complex computing. Maintaining maximum uptime, hard infrastructure resilience, rapid bug isolation, and clean architecture propagation across production nodes.
               </span>
               <span className="block text-slate-500 font-mono text-[7.5px] pt-1.5">GEO: 6.8561° N, 7.3958° E · UPTIME: 100%</span>
             </div>
@@ -575,7 +591,7 @@ export default function AboutSection({ accentColor }: AboutSectionProps) {
           </div>
 
           {/* Interactive 3D Scroll Highway container wrapper */}
-          <div ref={roadScrollTrackRef} className="relative w-full h-[600vh]">
+          <div ref={roadScrollTrackRef} id="engineering-roadmap" className="relative w-full h-[600vh]">
             
             {/* Sticky Viewport frame */}
             <div className="sticky top-[10vh] h-[75vh] md:h-[80vh] w-full rounded-2xl border border-white/10 bg-[#030510] overflow-hidden shadow-[inset_0_0_50px_rgba(0,0,0,0.85)] flex flex-col justify-end">
@@ -682,7 +698,9 @@ export default function AboutSection({ accentColor }: AboutSectionProps) {
                   <Gauge className="w-4 h-4 text-emerald-400 animate-pulse" />
                   <div className="text-left leading-none">
                     <span className="block text-[8px] uppercase tracking-wider text-slate-500">VECTOR SPEED</span>
-                    <span className="text-sm font-bold text-white tracking-tight">{scrollingSpeed} <span className="text-[9px] text-[#8A9BC4] font-normal">KM/H</span></span>
+                    <span className="text-sm font-bold text-white tracking-tight">
+                      <span ref={speedRef}>120</span> <span className="text-[9px] text-[#8A9BC4] font-normal">KM/H</span>
+                    </span>
                   </div>
                 </div>
 

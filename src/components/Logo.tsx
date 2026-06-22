@@ -1,6 +1,4 @@
 import React from 'react';
-// @ts-ignore
-import brandLogo from '../assets/images/airban_logo_asset_1780203778311.png';
 import { AccentColor } from '../types';
 import { getAccentHex } from '../utils';
 
@@ -28,16 +26,59 @@ export default function Logo({ size = 48, showText = true, glow = true, accentCo
           />
         )}
         
-        {/* Render the actual high-fidelity logo image asset provided by user */}
-        <img 
-          src={brandLogo}
-          alt="Airban Ikonicity Logo"
-          className="w-full h-full object-contain transition-all duration-300 pointer-events-none"
+        {/* SVG Doodle of Airban (A-I Fusion Tech Signature) */}
+        <svg
+          viewBox="0 0 100 100"
+          className="w-full h-full object-contain"
+          stroke={themeHex}
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
           style={{
-            filter: `drop-shadow(0 0 12px ${themeHex}66)`
+            filter: `drop-shadow(0 0 8px ${themeHex}aa)`
           }}
-          referrerPolicy="no-referrer"
-        />
+        >
+          {/* Faint futuristic technical alignment grid in background */}
+          <path d="M15,50 L85,50 M50,15 L50,85" stroke={`${themeHex}18`} strokeWidth="1" strokeDasharray="3 4" />
+          <circle cx="50" cy="50" r="38" stroke={`${themeHex}22`} strokeWidth="1" strokeDasharray="2 3" />
+          
+          {/* Main Stylized Hand-Drawn "A" / "I" Cyberpunk Doodle */}
+          {/* The Outer Left Leg */}
+          <path 
+            d="M 28 80 L 50 22" 
+            strokeWidth="4"
+          />
+          {/* The Outer Right Leg */}
+          <path 
+            d="M 50 22 L 72 80" 
+            strokeWidth="4"
+          />
+          
+          {/* Symmetrical Base Platforms */}
+          <path d="M 20 80 L 36 80" strokeWidth="4.5" />
+          <path d="M 64 80 L 80 80" strokeWidth="4.5" />
+
+          {/* Central Vertical 'I' Pillar element representing hard tech core */}
+          <path 
+            d="M 50 21 L 50 80" 
+            strokeWidth="3.5"
+            strokeDasharray="16 6 16"
+          />
+
+          {/* Circuit connection point node on top of the pillar */}
+          <circle cx="50" cy="22" r="4.5" fill={themeHex} stroke="none" />
+          
+          {/* Horizontal cross-node brace of the A */}
+          <path d="M 37 56 L 63 56" strokeWidth="3" />
+          <circle cx="50" cy="56" r="3.5" fill="#050816" stroke={themeHex} strokeWidth="2" />
+          
+          {/* Stylized geometric vector sparks/doodle trails on flanking sides */}
+          <path d="M 15 35 L 25 40" strokeWidth="1.5" stroke={`${themeHex}88`} />
+          <path d="M 85 35 L 75 40" strokeWidth="1.5" stroke={`${themeHex}88`} />
+          <path d="M 20 62 L 12 65" strokeWidth="1.5" stroke={`${themeHex}88`} />
+          <path d="M 80 62 L 88 65" strokeWidth="1.5" stroke={`${themeHex}88`} />
+        </svg>
       </div>
 
       {showText && (
@@ -48,7 +89,7 @@ export default function Logo({ size = 48, showText = true, glow = true, accentCo
             style={{ color: themeHex }}
           >
             <span className="w-5 h-[1px]" style={{ backgroundColor: `${themeHex}66` }} />
-            <span>AUTHENTIC BRAND</span>
+            <span>AIRBAN DOODLE</span>
             <span className="w-5 h-[1px]" style={{ backgroundColor: `${themeHex}66` }} />
           </div>
         </div>
@@ -56,3 +97,4 @@ export default function Logo({ size = 48, showText = true, glow = true, accentCo
     </div>
   );
 }
+

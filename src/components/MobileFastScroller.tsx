@@ -30,7 +30,7 @@ export default function MobileFastScroller({ accentColor, onSettingsClick }: Mob
   const [activeSection, setActiveSection] = useState('home');
   const [isDragging, setIsDragging] = useState(false);
   const [draggedLabel, setDraggedLabel] = useState<string | null>(null);
-  const [scrollY, setScrollY] = useState(0);
+  const [isScrolled, setIsScrolled] = useState(false);
   
   const railRef = useRef<HTMLDivElement>(null);
 
@@ -63,11 +63,23 @@ export default function MobileFastScroller({ accentColor, onSettingsClick }: Mob
     { id: 'contact', label: 'CONTACT COCKPIT', shortLabel: 'CONTACT', icon: Send },
   ];
 
-  // Monitor scroll for settings show/hide state
+  // Monitor scroll for settings show/hide state using RAF tracking
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      setScrollY(window.scrollY);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrolled = window.scrollY > 0;
+          setIsScrolled(prev => {
+            if (prev !== scrolled) return scrolled;
+            return prev;
+          });
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
+    handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -186,17 +198,17 @@ export default function MobileFastScroller({ accentColor, onSettingsClick }: Mob
             className="absolute right-14 top-1/2 -translate-y-1/2 pointer-events-none"
           >
             <div 
-              className="px-4 py-2 border rounded-xl shadow-2xl flex items-center gap-2 bg-[#050816]/95 backdrop-blur-md"
+              className="px-2.5 py-1 border rounded-lg shadow-2xl flex items-center gap-1.5 bg-[#050816]/95 backdrop-blur-md"
               style={{ 
                 borderColor: themeColor,
-                boxShadow: `0 0 20px ${themeColor}1a`
+                boxShadow: `0 0 12px ${themeColor}1a`
               }}
             >
-              <div 
-                className="w-1.5 h-1.5 rounded-full animate-ping" 
-                style={{ backgroundColor: themeColor }}
-              />
-              <span className="text-[10px] font-mono font-black tracking-widest text-white uppercase whitespace-nowrap">
+              <div className="relative flex h-1 w-1 items-center justify-center">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: themeColor }}></span>
+                <span className="relative inline-flex rounded-full h-1 w-1" style={{ backgroundColor: themeColor }}></span>
+              </div>
+              <span className="text-[7px] font-mono font-black tracking-widest text-white uppercase whitespace-nowrap">
                 {draggedLabel}
               </span>
             </div>
@@ -212,8 +224,25 @@ export default function MobileFastScroller({ accentColor, onSettingsClick }: Mob
         onTouchEnd={handleTouchEnd}
         className="flex flex-col items-center justify-between py-4 px-1.5 h-[330px] w-9 relative touch-none pointer-events-auto"
       >
-        {/* Subtle timeline track line indicator behind icons */}
-        <div className="absolute top-4 bottom-4 left-1/2 -translate-x-1/2 w-[1px] bg-white/10 pointer-events-none" />
+        {/* Subtle timeline track capsule bar behind icons starting at top and ending at active pill bottom */}
+        <div 
+          className="absolute left-1/2 -translate-x-1/2 w-6 rounded-full pointer-events-none transition-all duration-300 ease-out"
+          style={{
+            top: '16px', // py-4 padding top starts at 16px
+            height: `${(() => {
+              const activeIndex = Math.max(0, items.findIndex(i => i.id === activeSection));
+              const itemHeight = 24; // w-6 / h-6
+              const padding = 16;
+              const containerHeight = 330;
+              const trackHeight = containerHeight - 2 * padding; // 298
+              const totalItemsHeight = items.length * itemHeight; // 240
+              const gap = (trackHeight - totalItemsHeight) / (items.length - 1); // 58 / 9
+              return (activeIndex * itemHeight) + (activeIndex * gap) + itemHeight;
+            })()}px`,
+            backgroundColor: themeColor,
+            opacity: 0.3
+          }}
+        />
 
         {items.map((item, idx) => {
           const active = activeSection === item.id;
@@ -222,7 +251,6 @@ export default function MobileFastScroller({ accentColor, onSettingsClick }: Mob
           const Icon = item.icon;
           
           if (item.id === 'settings') {
-            const isScrolled = scrollY > 0;
             return (
               <button
                 key={item.id}
@@ -231,13 +259,16 @@ export default function MobileFastScroller({ accentColor, onSettingsClick }: Mob
                   onSettingsClick?.();
                 }}
                 className={`relative flex items-center justify-center w-6 h-6 rounded-full transition-all duration-300 focus:outline-none cursor-pointer z-10 ${
-                  isScrolled ? 'opacity-70 hover:opacity-100 scale-100 pointer-events-auto' : 'opacity-100 scale-110 pointer-events-auto'
+                  active ? 'scale-110' : (isScrolled ? 'opacity-70 hover:opacity-100 scale-100 pointer-events-auto' : 'opacity-100 scale-105 pointer-events-auto')
                 }`}
                 style={{
                   backgroundColor: 'transparent'
                 }}
               >
-                <Icon className="w-3.5 h-3.5 text-[#8A9BC4] hover:text-white transition-colors" />
+                <Icon 
+                  className="w-3.5 h-3.5 hover:text-white transition-colors" 
+                  style={scrolledPast ? { color: themeColor, opacity: 0.7 } : { color: '#8A9BC4' }}
+                />
               </button>
             );
           }
@@ -246,11 +277,11 @@ export default function MobileFastScroller({ accentColor, onSettingsClick }: Mob
           let iconStyle = {};
           
           if (active) {
-            iconClass += "text-black scale-110";
-            iconStyle = { color: '#000000' };
+            iconClass += "text-white scale-110";
+            iconStyle = { color: '#ffffff' };
           } else if (scrolledPast) {
             iconClass += "scale-100";
-            iconStyle = { color: '#aaaaaa' };
+            iconStyle = { color: themeColor, opacity: 0.7 };
           } else {
             iconClass += "text-[#8A9BC4] opacity-50";
           }
@@ -261,7 +292,9 @@ export default function MobileFastScroller({ accentColor, onSettingsClick }: Mob
               onClick={() => {
                 scrollToSection(item.id);
               }}
-              className="relative flex items-center justify-center w-6 h-6 rounded-full transition-all duration-300 focus:outline-none cursor-pointer z-10"
+              className={`relative flex items-center justify-center w-6 h-6 rounded-full transition-all duration-300 focus:outline-none cursor-pointer z-10 ${
+                active ? 'scale-110' : 'scale-100'
+              }`}
               style={{
                 backgroundColor: 'transparent'
               }}
@@ -271,7 +304,10 @@ export default function MobileFastScroller({ accentColor, onSettingsClick }: Mob
                 <motion.div
                   layoutId="activePill"
                   className="absolute inset-0 rounded-full z-0 pointer-events-none"
-                  style={{ backgroundColor: themeColor, opacity: 0.8 }}
+                  style={{ 
+                    backgroundColor: themeColor, 
+                    opacity: 0.8
+                  }}
                   transition={{ type: 'spring', stiffness: 380, damping: 25 }}
                 />
               )}

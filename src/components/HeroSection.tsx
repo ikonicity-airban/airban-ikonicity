@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, memo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Play, Download } from 'lucide-react';
 // @ts-ignore
@@ -38,7 +38,7 @@ interface HeroSectionProps {
   isBooting?: boolean;
 }
 
-export default function HeroSection({ accentColor, videoUrl, heroBgVideoUrl, availabilityStatus, isMuted = true, onDownloadCVClick, isBooting = false }: HeroSectionProps) {
+function HeroSection({ accentColor, videoUrl, heroBgVideoUrl, availabilityStatus, isMuted = true, onDownloadCVClick, isBooting = false }: HeroSectionProps) {
   const [scrollY, setScrollY] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const bgVideoRef = useRef<HTMLVideoElement>(null);
@@ -119,10 +119,17 @@ export default function HeroSection({ accentColor, videoUrl, heroBgVideoUrl, ava
     }
   };
 
-  // Monitor scroll for Parallax effects
+  // Monitor scroll for Parallax effects (gated via RequestAnimationFrame to prevent browser thread saturation)
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      setScrollY(window.scrollY);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setScrollY(window.scrollY);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
@@ -299,10 +306,11 @@ export default function HeroSection({ accentColor, videoUrl, heroBgVideoUrl, ava
 
       {/* ─── GRAND HERO HEADER BACKDROP TEXT WITH SCROLL PARALLAX ─── */}
       <div 
-        className="absolute inset-x-0 top-[20%] md:top-[12%] flex flex-col items-center justify-center select-none pointer-events-none z-1 overflow-hidden"
+        className="absolute inset-x-0 top-[20%] md:top-[calc(12%+4rem)] flex flex-col items-center justify-center select-none pointer-events-none overflow-hidden"
         style={{ 
           transform: `translateY(${scrollY * 0.45}px)`,
-          opacity: Math.max(0, 0.90 - scrollY * 0.003)
+          opacity: Math.max(0, 0.90 - scrollY * 0.003),
+          zIndex: 1
         }}
       >
         <motion.div
@@ -428,9 +436,9 @@ export default function HeroSection({ accentColor, videoUrl, heroBgVideoUrl, ava
           />
         </motion.div>
 
-        {/* LEFT COLUMN CONTENT: Absolute, left 5%, vertically centered */}
+        {/* LEFT COLUMN CONTENT: Absolute, left 5%, vertically centered & shifted downwards */}
         <div 
-          className="absolute left-[5%] top-1/2 -translate-y-1/2 w-[30%] flex flex-col space-y-16 text-left pointer-events-auto"
+          className="absolute left-[5%] top-1/2 -translate-y-[calc(50%-7rem)] w-[30%] flex flex-col space-y-16 text-left pointer-events-auto"
           style={{ opacity: colOpacity }}
         >
           {/* Identity Block */}
@@ -443,36 +451,10 @@ export default function HeroSection({ accentColor, videoUrl, heroBgVideoUrl, ava
             <span className="font-display font-black text-[#CAD5EE] block text-[9.5px] uppercase tracking-[0.25em]">
               // IDENTITY
             </span>
-            <h1 
-              className="font-black tracking-tight leading-[0.95] uppercase flex flex-col pt-1"
-              style={{ 
-                fontSize: 'clamp(1.8rem, 3vw, 2.8rem)',
-                fontFamily: "'Syne', sans-serif"
-              }}
-            >
-              <span
-                style={{
-                  background: `linear-gradient(135deg, ${primaryColorHex} 25%, #050816 100%)`,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
-              >
-                Airban
-              </span>
-              <span
-                style={{
-                  background: 'linear-gradient(135deg, #FFFFFF 10%, #8A9BC4 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
-              >
-                Ikonicity
-              </span>
-            </h1>
             <p 
-              className={`font-accent font-black leading-normal ${textAccentClass}`}
+              className={`font-accent font-black leading-normal ${textAccentClass} pt-2.5`}
               style={{ 
-                fontSize: 'clamp(1rem, 1.8vw, 1.4rem)',
+                fontSize: 'clamp(1.2rem, 2vw, 1.6rem)',
                 WebkitTextStroke: '1px #000000',
               }}
             >
@@ -550,9 +532,9 @@ export default function HeroSection({ accentColor, videoUrl, heroBgVideoUrl, ava
           </div>
         </div>
 
-        {/* RIGHT COLUMN CONTENT: Absolute, right 5%, vertically centered */}
+        {/* RIGHT COLUMN CONTENT: Absolute, right 5%, vertically centered & shifted downwards */}
         <div 
-          className="absolute right-[5%] top-1/2 -translate-y-1/2 w-[30%] flex flex-col space-y-16 text-left pointer-events-auto"
+          className="absolute right-[5%] top-1/2 -translate-y-[calc(50%-7rem)] w-[30%] flex flex-col space-y-16 text-left pointer-events-auto"
           style={{ opacity: colOpacity }}
         >
           {/* Display Label Block 1 */}
@@ -929,3 +911,5 @@ export default function HeroSection({ accentColor, videoUrl, heroBgVideoUrl, ava
     </section>
   );
 }
+
+export default memo(HeroSection);

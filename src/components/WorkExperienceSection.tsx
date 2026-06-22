@@ -1,4 +1,5 @@
-import { motion } from 'motion/react';
+import { useRef } from 'react';
+import { motion, useScroll, useTransform } from 'motion/react';
 import { Briefcase, Calendar, MapPin, ExternalLink, Sparkles, Server } from 'lucide-react';
 import { getAccentHex, getAccentTextClass, getAccentBgClass } from '../utils';
 
@@ -185,9 +186,26 @@ export default function WorkExperienceSection({ accentColor }: WorkExperienceSec
     }
   };
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start end", "end start"]
+  });
+
+  const glowHex = {
+    green: '#39FF14',
+    cyan: '#00D4FF',
+    pink: '#FF007F',
+    purple: '#BD00FF',
+    yellow: '#FFE600'
+  }[accentColor];
+
+  // Map progress to top% position for the gradient beam (shooting star)
+  const beamY = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+
   return (
     <section id="experience" className="py-24 border-t border-white/5 relative z-20 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         
         {/* Section Header */}
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 mb-20 text-left">
@@ -205,11 +223,21 @@ export default function WorkExperienceSection({ accentColor }: WorkExperienceSec
         </div>
 
         {/* Timeline */}
-        <div className="relative">
+        <div ref={containerRef} className="relative">
           
           {/* Centered vertical running line on desktop */}
           <div className="absolute left-4 md:left-1/2 md:-translate-x-1/2 top-0 bottom-0 w-[1px] bg-white/10 pointer-events-none">
             <div className={`absolute inset-y-0 w-full bg-gradient-to-b from-transparent ${getLineGradientClass(accentColor)} to-transparent`} />
+            
+            {/* The Shooting Star Beam gradient following the scroll */}
+            <motion.div 
+              style={{ 
+                top: beamY,
+                boxShadow: `0 0 15px ${glowHex}, 0 0 5px ${glowHex}`,
+                background: `linear-gradient(to bottom, transparent, ${glowHex}, transparent)`
+              }}
+              className="absolute left-1/2 -translate-x-1/2 w-[3px] h-[120px] sm:h-[180px] rounded-full -translate-y-1/2 opacity-90" 
+            />
           </div>
 
           <div className="space-y-16">
@@ -231,7 +259,7 @@ export default function WorkExperienceSection({ accentColor }: WorkExperienceSec
                   </div>
 
                   {/* Left Side Column */}
-                  <div className={`w-full md:w-[45%] pl-12 md:pl-0 ${isEven ? 'md:text-right md:order-1' : 'md:text-left md:order-2'}`}>
+                  <div className={`w-full md:w-[45%] pl-9 md:pl-0 ${isEven ? 'md:text-right md:order-1' : 'md:text-left md:order-2'}`}>
                     <motion.div 
                       className="pt-2"
                       initial={{ opacity: 0, x: isEven ? -20 : 20 }}
@@ -250,22 +278,22 @@ export default function WorkExperienceSection({ accentColor }: WorkExperienceSec
                       </h3>
 
                       {/* Period, Type & Location list */}
-                      <div className={`flex flex-wrap items-center gap-2.5 text-[11px] font-mono text-[#8A9BC4] ${isEven ? 'md:justify-end' : 'md:justify-start'}`}>
-                        <span className="text-white font-bold tracking-wide">
-                          {entry.period}
-                        </span>
-                        <span>·</span>
-                        <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/5 text-[10px]">
-                          {entry.type}
-                        </span>
+                      <div className={`flex flex-col sm:flex-row sm:items-center gap-2 text-[11px] font-mono text-[#8A9BC4] ${isEven ? 'md:justify-end' : 'md:justify-start'}`}>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-white font-bold tracking-wide shrink-0">
+                            {entry.period}
+                          </span>
+                          <span>·</span>
+                          <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/5 text-[10px] whitespace-nowrap">
+                            {entry.type}
+                          </span>
+                        </div>
                         {entry.location && (
-                          <>
-                            <span>·</span>
-                            <span className="flex items-center gap-1">
-                              <MapPin className="w-3 h-3 text-slate-500 shrink-0" />
-                              {entry.location}
-                            </span>
-                          </>
+                          <div className="flex items-center gap-1.5 leading-tight">
+                            <span className="hidden sm:inline">·</span>
+                            <MapPin className="w-3 h-3 text-slate-500 shrink-0" />
+                            <span>{entry.location}</span>
+                          </div>
                         )}
                       </div>
 
@@ -281,9 +309,9 @@ export default function WorkExperienceSection({ accentColor }: WorkExperienceSec
                   </div>
 
                   {/* Right Side Column */}
-                  <div className={`w-full md:w-[45%] pl-12 md:pl-0 mt-4 md:mt-0 ${isEven ? 'md:order-2' : 'md:order-1'}`}>
+                  <div className={`w-full md:w-[45%] pl-9 md:pl-0 mt-4 md:mt-0 ${isEven ? 'md:order-2' : 'md:order-1'}`}>
                     <motion.div 
-                      className={`p-6 rounded-2xl bg-[#080D1F] border border-white/5 transition-all duration-300 text-left relative ${accentBorderClass}`}
+                      className={`p-4 sm:p-6 rounded-2xl bg-[#080D1F] border border-white/5 transition-all duration-300 text-left relative ${accentBorderClass}`}
                       initial={{ opacity: 0, x: isEven ? 20 : -20 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true, margin: "-100px" }}
@@ -359,7 +387,7 @@ export default function WorkExperienceSection({ accentColor }: WorkExperienceSec
                           <span className="block text-[8.5px] font-mono uppercase font-black tracking-widest text-[#8A9BC4]">
                             DEPLOYED PIPELINES
                           </span>
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {entry.projects.map((proj, i) => (
                               <a 
                                 key={i}

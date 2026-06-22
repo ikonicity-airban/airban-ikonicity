@@ -50,7 +50,6 @@ import {
   getAccentSelectionClass,
 } from "./utils";
 import { AccentColor } from "./types";
-import CyberpunkParticles from "./components/CyberpunkParticles";
 import HeroSection from "./components/HeroSection";
 import AboutSection from "./components/AboutSection";
 import SkillsSection from "./components/SkillsSection";
@@ -179,6 +178,22 @@ export default function App() {
 
   useEffect(() => {
     const handleScroll = () => {
+      const roadmapEl = document.getElementById("engineering-roadmap");
+      if (roadmapEl) {
+        const rect = roadmapEl.getBoundingClientRect();
+        // The user has passed the engineering roadmap section when the bottom of that section has crossed above the viewport bottom.
+        if (rect.bottom > window.innerHeight) {
+          setShowWhatsApp(false);
+          if (whatsappTimeoutRef.current) {
+            clearTimeout(whatsappTimeoutRef.current);
+          }
+          return;
+        }
+      } else {
+        setShowWhatsApp(false);
+        return;
+      }
+
       // Show WhatsApp button while scrolling is happening
       setShowWhatsApp(true);
 
@@ -659,9 +674,6 @@ export default function App() {
           `
         }}
       />
-
-      {/* Dynamic Cyberpunk Ambient Particle System */}
-      <CyberpunkParticles accentColor={accentColor} />
 
       {/* BOOTING SEQUENCE SYSTEM LOADER (GIT BASH CONSOLE) */}
       <AnimatePresence>

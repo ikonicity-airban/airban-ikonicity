@@ -1,6 +1,8 @@
 import { motion } from 'motion/react';
 import { Layers, Database, Cpu, Cloud, Link as LinkIcon, Compass, Play } from 'lucide-react';
 import { getAccentHex, getAccentTextClass, getAccentBgClass, getViaColorClass } from '../utils';
+// @ts-ignore
+import servicesBg from '../assets/images/services_bg_1782142266947.jpg';
 
 interface ServicesSectionProps {
   accentColor: 'green' | 'cyan' | 'pink' | 'purple' | 'yellow';
@@ -164,8 +166,15 @@ export default function ServicesSection({ accentColor }: ServicesSectionProps) {
   };
 
   return (
-    <section id="services" className="py-24 border-t border-white/5 relative z-20">
-      <div className="max-w-7xl mx-auto px-6">
+    <section 
+      id="services" 
+      className="py-24 border-t border-white/5 relative z-20 bg-cover bg-center overflow-hidden"
+      style={{ backgroundImage: `url(${servicesBg})` }}
+    >
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-[#050816]/92 backdrop-blur-[2px] z-0" />
+
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
         
         {/* Section Title */}
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 mb-16 text-left">
@@ -189,7 +198,7 @@ export default function ServicesSection({ accentColor }: ServicesSectionProps) {
             return (
               <motion.div 
                 key={svc.id}
-                className={`p-6 bg-[#080D1F] border border-white/5 rounded-xl transition-all duration-300 text-left flex flex-col justify-between min-h-[460px] ${accentBorderLeftClass} ${hoverBorders}`}
+                className={`p-6 bg-gradient-to-b from-white/[0.01] to-[#080D1F]/90 backdrop-blur-md border border-white/5 rounded-xl transition-all duration-300 text-left flex flex-col justify-between min-h-[460px] ${accentBorderLeftClass} ${hoverBorders}`}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-100px" }}

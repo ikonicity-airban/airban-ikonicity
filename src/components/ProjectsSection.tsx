@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, memo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ExternalLink, ChevronRight, Server, PhoneCall, Globe, Truck, Users, Search, Code, Cpu, ShieldAlert, X } from 'lucide-react';
 import { portfolioData } from '../data';
@@ -11,7 +11,7 @@ interface ProjectsSectionProps {
   dbProjects?: any[];
 }
 
-export default function ProjectsSection({ accentColor, dbProjects }: ProjectsSectionProps) {
+function ProjectsSection({ accentColor, dbProjects }: ProjectsSectionProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string>('all');
   const [hoveredPid, setHoveredPid] = useState<string | null>(null);
@@ -80,21 +80,28 @@ export default function ProjectsSection({ accentColor, dbProjects }: ProjectsSec
   // Parse project source: if dbProjects exists and isn't empty, use formatted db projects. Otherwise use static data.
   const projectsToUse: Project[] = useMemo(() => {
     return dbProjects && dbProjects.length > 0
-      ? dbProjects.map((p, idx) => ({
-          id: p.slug || p.id,
-          title: p.title,
-          subtitle: p.description,
-          tag: p.role,
-          description: p.longDesc || p.description,
-          status: p.status,
-          logoText: p.title.slice(0, 2).toUpperCase(),
-          tech: p.stack || [],
-          links: [
-            { label: 'Live Site', url: p.liveUrl || '#' },
-            { label: 'Repo', url: p.repoUrl || '#' }
-          ],
-          meta: p.year ? `YEAR: ${p.year} // DB_SYNC` : `TX_RATE: 1.8s // DB_SYNC`
-        }))
+      ? dbProjects.map((p, idx) => {
+          const idVal = p.slug || p.id;
+          let roleVal = p.role;
+          if (idVal === 'geek-creations' && roleVal) {
+            roleVal = roleVal.replace(/Founder/gi, 'Lead Developer');
+          }
+          return {
+            id: idVal,
+            title: p.title,
+            subtitle: p.description,
+            tag: roleVal,
+            description: p.longDesc || p.description,
+            status: p.status,
+            logoText: p.title.slice(0, 2).toUpperCase(),
+            tech: p.stack || [],
+            links: [
+              { label: 'Live Site', url: p.liveUrl || '#' },
+              { label: 'Repo', url: p.repoUrl || '#' }
+            ],
+            meta: p.year ? `YEAR: ${p.year} // DB_SYNC` : `TX_RATE: 1.8s // DB_SYNC`
+          };
+        })
       : portfolioData.projects;
   }, [dbProjects]);
 
@@ -169,7 +176,7 @@ export default function ProjectsSection({ accentColor, dbProjects }: ProjectsSec
             <span className={`text-[10px] uppercase font-mono tracking-[0.25em] font-extrabold ${accentTextClass} block mb-1`}>
               &gt;_ SECTOR_004 // PRODUCTION SYSTEMS DECK
             </span>
-            <h2 className="text-3xl font-black text-white tracking-tight leading-none font-display uppercase">
+            <h2 className="text-3xl font-black text-white tracking-tight leading-tight font-display uppercase">
               Project Deployments Bento
             </h2>
           </div>
@@ -263,12 +270,12 @@ export default function ProjectsSection({ accentColor, dbProjects }: ProjectsSec
         {/* COMPREHENSIVE PRESENTATION FLOW */}
         {isDefaultView ? (
           /* BENTO GRID (Upper Section: Ratios 4:4 Left and 2:2 Top/Bottom Right) */
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch mb-8 font-sans">
             
             {/* LEFT CONTAINER Slot: GEEK CREATIONS */}
             {geekCreations && (
               <div 
-                className={`lg:col-span-8 relative rounded-3xl p-6 md:p-8 bg-[#080D1F] border border-white/5 ${accentBorderHoverClass} hover:shadow-[0_0_25px_rgba(57,255,20,0.04)] transition-all duration-300 flex flex-col justify-between group overflow-hidden min-h-[420px] cursor-pointer`}
+                className={`lg:col-span-8 relative rounded-3xl p-6 md:p-8 bg-[#080D1F] border border-white/5 ${accentBorderHoverClass} hover:shadow-[0_0_25px_rgba(57,255,20,0.04)] transition-all duration-300 flex flex-col justify-between group overflow-hidden min-h-fit md:min-h-[420px] cursor-pointer`}
                 onMouseEnter={() => {
                   setHoveredPid(geekCreations.id);
                   playClickSound('hover');
@@ -282,14 +289,14 @@ export default function ProjectsSection({ accentColor, dbProjects }: ProjectsSec
                 )}
 
                 <div>
-                  <div className="flex items-center justify-between mb-6">
+                  <div className="flex flex-wrap gap-4 items-start sm:items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-xl bg-white/[0.01] border border-white/10 flex items-center justify-center font-display font-black text-[#39FF14] text-xs">
                         {geekCreations.logoText}
                       </div>
                       <div>
                         <span className="block text-[8px] text-[#8A9BC4] uppercase tracking-wider font-mono">PRIMARY FEATURE CARD [4:4]</span>
-                        <span className="block text-white font-bold text-xs uppercase font-mono">{geekCreations.tag}</span>
+                        <span className="block text-white font-bold text-xs uppercase font-mono leading-tight">{geekCreations.tag}</span>
                       </div>
                     </div>
                     {renderStatus(geekCreations.status)}
@@ -297,10 +304,10 @@ export default function ProjectsSection({ accentColor, dbProjects }: ProjectsSec
 
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
                     <div className="md:col-span-7 space-y-3.5 text-left">
-                      <h3 className="text-2xl md:text-3xl font-display font-black text-white tracking-tight uppercase leading-none group-hover:text-[#39FF14] transition-colors">
+                      <h3 className="text-2xl md:text-3xl font-display font-black text-white tracking-tight uppercase leading-tight group-hover:text-[#39FF14] transition-colors">
                         {geekCreations.title}
                       </h3>
-                      <p className="text-xs md:text-sm text-[#39FF14] font-mono leading-none font-bold">
+                      <p className="text-xs md:text-sm text-[#39FF14] font-mono leading-relaxed font-bold">
                         {geekCreations.subtitle}
                       </p>
                       <p className="text-xs text-[#8A9BC4] leading-relaxed max-w-2xl font-normal pt-2">
@@ -330,8 +337,8 @@ export default function ProjectsSection({ accentColor, dbProjects }: ProjectsSec
                     ))}
                   </div>
 
-                  <div className="flex items-center justify-between font-mono text-[9px] text-[#8A9BC4]">
-                    <span>{geekCreations.meta}</span>
+                  <div className="flex flex-wrap gap-3 items-center justify-between font-mono text-[9px] text-[#8A9BC4]">
+                    <span className="break-all">{geekCreations.meta}</span>
                     <div className="flex items-center gap-3">
                       <button 
                         onClick={(e) => {
@@ -365,14 +372,14 @@ export default function ProjectsSection({ accentColor, dbProjects }: ProjectsSec
                   onClick={() => handleOpenDetail(icatholicIgbo)}
                 >
                   <div>
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex flex-wrap gap-2 items-start sm:items-center justify-between mb-4">
                       <span className="text-[8px] text-[#8A9BC4] uppercase tracking-wider font-mono">BENTO_SLOT [2:2]</span>
                       {renderStatus(icatholicIgbo.status)}
                     </div>
 
                     <div className="space-y-1 text-left">
-                      <span className="block text-[9.5px] text-[#00D4FF] font-mono leading-none uppercase tracking-wide font-bold">{icatholicIgbo.tag}</span>
-                      <h3 className="text-lg md:text-xl font-display font-black text-white uppercase group-hover:text-[#39FF14] transition-colors pt-1">
+                      <span className="block text-[9.5px] text-[#00D4FF] font-mono leading-normal uppercase tracking-wide font-bold">{icatholicIgbo.tag}</span>
+                      <h3 className="text-lg md:text-xl font-display font-black text-white uppercase group-hover:text-[#39FF14] transition-colors pt-1 leading-tight">
                         {icatholicIgbo.title}
                       </h3>
                       {icatholicIgbo.image && (
@@ -392,7 +399,7 @@ export default function ProjectsSection({ accentColor, dbProjects }: ProjectsSec
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t border-white/5 mt-4 space-y-4">
+                  <div className="pt-4 border-t border-white/5 mt-4 space-y-4 font-sans">
                     <div className="flex flex-wrap gap-1">
                       {icatholicIgbo.tech.map((t, idx) => (
                         <span key={idx} className="text-[8px] font-mono px-2 py-0.5 rounded bg-white/[0.02] border border-white/5 text-[#8A9BC4]">
@@ -401,9 +408,9 @@ export default function ProjectsSection({ accentColor, dbProjects }: ProjectsSec
                       ))}
                     </div>
 
-                    <div className="flex items-center justify-between font-mono text-[8px] text-[#8A9BC4]">
-                      <span>{icatholicIgbo.meta}</span>
-                      <span className="text-white hover:text-[#39FF14] font-black group-hover:underline">SPEC_VIEW ▶</span>
+                    <div className="flex flex-wrap gap-2 items-center justify-between font-mono text-[8px] text-[#8A9BC4]">
+                      <span className="break-all">{icatholicIgbo.meta}</span>
+                      <span className="text-white hover:text-[#39FF14] font-black group-hover:underline shrink-0">SPEC_VIEW ▶</span>
                     </div>
                   </div>
 
@@ -422,14 +429,14 @@ export default function ProjectsSection({ accentColor, dbProjects }: ProjectsSec
                   onClick={() => handleOpenDetail(biddo)}
                 >
                   <div>
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex flex-wrap gap-2 items-start sm:items-center justify-between mb-4">
                       <span className="text-[8px] text-[#8A9BC4] uppercase tracking-wider font-mono">BENTO_SLOT [2:2]</span>
                       {renderStatus(biddo.status)}
                     </div>
 
                     <div className="space-y-1 text-left">
-                      <span className="block text-[9.5px] text-emerald-400 font-mono leading-none uppercase tracking-wide font-bold">{biddo.tag}</span>
-                      <h3 className="text-lg md:text-xl font-display font-black text-white uppercase group-hover:text-[#39FF14] transition-colors pt-1">
+                      <span className="block text-[9.5px] text-emerald-400 font-mono leading-normal uppercase tracking-wide font-bold">{biddo.tag}</span>
+                      <h3 className="text-lg md:text-xl font-display font-black text-white uppercase group-hover:text-[#39FF14] transition-colors pt-1 leading-tight">
                         {biddo.title}
                       </h3>
                       {biddo.image && (
@@ -449,7 +456,7 @@ export default function ProjectsSection({ accentColor, dbProjects }: ProjectsSec
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t border-white/5 mt-4 space-y-4">
+                  <div className="pt-4 border-t border-white/5 mt-4 space-y-4 font-sans">
                     <div className="flex flex-wrap gap-1">
                       {biddo.tech.map((t, idx) => (
                         <span key={idx} className="text-[8px] font-mono px-2 py-0.5 rounded bg-white/[0.02] border border-white/5 text-[#8A9BC4]">
@@ -458,9 +465,9 @@ export default function ProjectsSection({ accentColor, dbProjects }: ProjectsSec
                       ))}
                     </div>
 
-                    <div className="flex items-center justify-between font-mono text-[8px] text-[#8A9BC4]">
-                      <span>{biddo.meta}</span>
-                      <span className="text-white hover:text-[#39FF14] font-black group-hover:underline">SPEC_VIEW ▶</span>
+                    <div className="flex flex-wrap gap-2 items-center justify-between font-mono text-[8px] text-[#8A9BC4]">
+                      <span className="break-all">{biddo.meta}</span>
+                      <span className="text-white hover:text-[#39FF14] font-black group-hover:underline shrink-0">SPEC_VIEW ▶</span>
                     </div>
                   </div>
 
@@ -513,7 +520,7 @@ export default function ProjectsSection({ accentColor, dbProjects }: ProjectsSec
 
                   <div className="space-y-1.5">
                     <span className="block text-[8px] font-mono text-slate-400 font-bold uppercase tracking-wide">{p.tag}</span>
-                    <h4 className="text-sm font-display font-black text-white uppercase group-hover:text-[#39FF14] transition-colors">{p.title}</h4>
+                    <h4 className="text-sm font-display font-black text-white uppercase group-hover:text-[#39FF14] transition-colors leading-tight">{p.title}</h4>
                     <p className="text-[10.5px] text-[#8A9BC4] leading-relaxed font-normal">{p.subtitle}</p>
                   </div>
                 </div>
@@ -580,3 +587,5 @@ export default function ProjectsSection({ accentColor, dbProjects }: ProjectsSec
     </section>
   );
 }
+
+export default memo(ProjectsSection);

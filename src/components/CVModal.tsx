@@ -841,7 +841,7 @@ export default function CVModal({ isOpen, onClose, accentColor }: CVModalProps) 
                     <div>
                       <div className="flex justify-between items-baseline gap-2">
                         <p className="text-[11.5px] sm:text-[12.5px] font-extrabold text-slate-900 leading-tight">
-                          Geek Creations <span className="font-light text-slate-300">—</span> <span className="text-slate-600 font-semibold text-[11px]">Founder & Full-Stack Engineer</span>
+                          Geek Creations <span className="font-light text-slate-300">—</span> <span className="text-slate-600 font-semibold text-[11px]">Lead Developer & Full-Stack Engineer</span>
                         </p>
                         <p className="text-[9.5px] font-mono font-bold text-slate-900 shrink-0 uppercase tracking-wider">Ongoing</p>
                       </div>
