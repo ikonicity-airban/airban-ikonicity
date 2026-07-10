@@ -26,8 +26,11 @@ export default function ContactSection({ accentColor }: ContactSectionProps) {
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<'idle' | 'transmitting' | 'success' | 'error'>('idle');
-  const [logs, setLogs] = useState<string[]>([]);
-  const terminalEndRef = useRef<HTMLDivElement>(null);
+  const [logs, setLogs] = useState<string[]>(() => [
+    `[${new Date().toLocaleTimeString()}] SECURE CONTACT LINK STANDBY // PORT: 3000...`,
+    `[${new Date().toLocaleTimeString()}] READY FOR INCOMING TX DATA PACKETS.`
+  ]);
+  const terminalContainerRef = useRef<HTMLDivElement>(null);
 
   // Honeypot spam protection
   const [honeypot, setHoneypot] = useState('');
@@ -49,20 +52,8 @@ export default function ContactSection({ accentColor }: ContactSectionProps) {
   const isMounted = useRef(false);
 
   useEffect(() => {
-    // Initializing contact stream logs
-    setLogs([
-      `[${new Date().toLocaleTimeString()}] SECURE CONTACT LINK STANDBY // PORT: 3000...`,
-      `[${new Date().toLocaleTimeString()}] READY FOR INCOMING TX DATA PACKETS.`
-    ]);
-  }, []);
-
-  useEffect(() => {
-    if (!isMounted.current) {
-      isMounted.current = true;
-      return;
-    }
-    if (terminalEndRef.current) {
-      terminalEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (terminalContainerRef.current) {
+      terminalContainerRef.current.scrollTop = terminalContainerRef.current.scrollHeight;
     }
   }, [logs]);
 
@@ -234,10 +225,11 @@ export default function ContactSection({ accentColor }: ContactSectionProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Name */}
                 <div className="space-y-2">
-                  <label className={`block text-[9px] font-mono font-bold tracking-widest ${textAccentClass} uppercase`}>
+                  <label htmlFor="contact-name" className={`block text-[9px] font-mono font-bold tracking-widest ${textAccentClass} uppercase`}>
                     // YOUR NAME
                   </label>
                   <input
+                    id="contact-name"
                     type="text"
                     required
                     placeholder="Eban Godwin"
@@ -262,10 +254,11 @@ export default function ContactSection({ accentColor }: ContactSectionProps) {
 
                 {/* Email */}
                 <div className="space-y-2">
-                  <label className={`block text-[9px] font-mono font-bold tracking-widest ${textAccentClass} uppercase`}>
+                  <label htmlFor="contact-email" className={`block text-[9px] font-mono font-bold tracking-widest ${textAccentClass} uppercase`}>
                     // EMAIL ADDRESS
                   </label>
                   <input
+                    id="contact-email"
                     type="email"
                     required
                     placeholder="you@company.com"
@@ -292,15 +285,16 @@ export default function ContactSection({ accentColor }: ContactSectionProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Subject Dropdown */}
                 <div className="space-y-2">
-                  <label className={`block text-[9px] font-mono font-bold tracking-widest ${textAccentClass} uppercase`}>
+                  <label htmlFor="contact-subject" className={`block text-[9px] font-mono font-bold tracking-widest ${textAccentClass} uppercase`}>
                     // SUBJECT
                   </label>
                   <select
+                    id="contact-subject"
                     value={formData.subject}
                     onChange={(e) => handleInputChange('subject', e.target.value)}
                     onFocus={() => setFocusedField('subject')}
                     onBlur={() => setFocusedField(null)}
-                    className="w-full bg-[#080D1F] border border-[#1A2544] rounded px-4 py-3 text-xs text-[#F0F4FF] font-mono outline-none transition-all"
+                    className="w-full bg-[#080D1F] border border-[#1A2544] rounded px-4 py-3 text-xs text-[#F0F4FF] font-mono outline-none transition-all cursor-pointer"
                     style={focusedField === 'subject' ? {
                       borderColor: getAccentHex(accentColor),
                       boxShadow: `0 0 0 1px ${getAccentHex(accentColor)}`
@@ -318,15 +312,16 @@ export default function ContactSection({ accentColor }: ContactSectionProps) {
 
                 {/* Budget Range (optional) */}
                 <div className="space-y-2">
-                  <label className={`block text-[9px] font-mono font-bold tracking-widest ${textAccentClass} uppercase`}>
+                  <label htmlFor="contact-budget" className={`block text-[9px] font-mono font-bold tracking-widest ${textAccentClass} uppercase`}>
                     // BUDGET RANGE (OPTIONAL)
                   </label>
                   <select
+                    id="contact-budget"
                     value={formData.budget}
                     onChange={(e) => handleInputChange('budget', e.target.value)}
                     onFocus={() => setFocusedField('budget')}
                     onBlur={() => setFocusedField(null)}
-                    className="w-full bg-[#080D1F] border border-[#1A2544] rounded px-4 py-3 text-xs text-[#F0F4FF] font-mono outline-none transition-all"
+                    className="w-full bg-[#080D1F] border border-[#1A2544] rounded px-4 py-3 text-xs text-[#F0F4FF] font-mono outline-none transition-all cursor-pointer"
                     style={focusedField === 'budget' ? {
                       borderColor: getAccentHex(accentColor),
                       boxShadow: `0 0 0 1px ${getAccentHex(accentColor)}`
@@ -344,10 +339,11 @@ export default function ContactSection({ accentColor }: ContactSectionProps) {
 
               {/* Message text area */}
               <div className="space-y-2">
-                <label className={`block text-[9px] font-mono font-bold tracking-widest ${textAccentClass} uppercase`}>
+                <label htmlFor="contact-message" className={`block text-[9px] font-mono font-bold tracking-widest ${textAccentClass} uppercase`}>
                   // MESSAGE
                 </label>
                 <textarea
+                  id="contact-message"
                   required
                   rows={6}
                   placeholder="Tell me about the problem you're trying to solve..."
@@ -371,13 +367,15 @@ export default function ContactSection({ accentColor }: ContactSectionProps) {
               </div>
 
               {/* LIVE TERMINAL FEEDBACK BOX FOR SYSTEM COCKPIT EMULATION */}
-              <div className="font-mono bg-[#050816] rounded p-4 border border-white/5 text-[10px] text-[#8A9BC4] space-y-1.5 max-h-[120px] overflow-y-auto">
+              <div 
+                ref={terminalContainerRef}
+                className="font-mono bg-[#050816] rounded p-4 border border-white/5 text-[10px] text-[#8A9BC4] space-y-1.5 max-h-[120px] overflow-y-auto scrollbar-thin"
+              >
                 {logs.map((log, index) => (
                   <div key={index} className="text-left font-mono leading-relaxed whitespace-pre-wrap">
                     {log}
                   </div>
                 ))}
-                <div ref={terminalEndRef} />
               </div>
 
               {/* Submit Button */}
@@ -554,7 +552,7 @@ export default function ContactSection({ accentColor }: ContactSectionProps) {
               <div className="flex flex-wrap gap-2.5">
                 {[
                   { icon: <Github className="w-5 h-5" />, url: "https://github.com/ikonicity-airban", name: "GitHub" },
-                  { icon: <Linkedin className="w-5 h-5" />, url: "https://linkedin.com/in/ebangodwinikoni", name: "LinkedIn" },
+                  { icon: <Linkedin className="w-5 h-5" />, url: "https://www.linkedin.com/in/airban-ikonicity", name: "LinkedIn" },
                   { icon: <Twitter className="w-5 h-5" />, url: "https://x.com/ikonicityairban", name: "X" },
                   { icon: <Compass className="w-5 h-5" />, url: "https://t.me/ikonicity_airban", name: "Telegram" },
                   { icon: <MessageSquare className="w-5 h-5" />, url: "https://discord.com/users/ikonicity", name: "Discord" }

@@ -74,7 +74,7 @@ export default function FooterSection({ accentColor, onOpenAdmin, availabilitySt
     'Type "help" to list protocols and access nodes.'
   ]);
   const [currentInput, setCurrentInput] = useState<string>('');
-  const terminalEndRef = useRef<HTMLDivElement>(null);
+  const terminalContainerRef = useRef<HTMLDivElement>(null);
 
   const handleCommandSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,15 +106,9 @@ export default function FooterSection({ accentColor, onOpenAdmin, availabilitySt
     playClickSound('synth');
   };
 
-  const isMounted = useRef(false);
-
   useEffect(() => {
-    if (!isMounted.current) {
-      isMounted.current = true;
-      return;
-    }
-    if (terminalEndRef.current) {
-      terminalEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (terminalContainerRef.current) {
+      terminalContainerRef.current.scrollTop = terminalContainerRef.current.scrollHeight;
     }
   }, [terminalLines]);
 
@@ -364,13 +358,15 @@ export default function FooterSection({ accentColor, onOpenAdmin, availabilitySt
             </div>
 
             {/* Screen Logs Output */}
-            <div className="flex-grow overflow-y-auto font-mono text-[11px] leading-relaxed text-[#CAD5EE] my-3 space-y-1 scrollbar-thin">
+            <div 
+              ref={terminalContainerRef}
+              className="flex-grow overflow-y-auto font-mono text-[11px] leading-relaxed text-[#CAD5EE] my-3 space-y-1 scrollbar-thin"
+            >
               {terminalLines.map((line, idx) => (
                 <div key={idx} className={line.startsWith('>') ? `${textAccentClass} font-bold` : 'text-[#8A9BC4]'}>
                   {line}
                 </div>
               ))}
-              <div ref={terminalEndRef} />
             </div>
 
             {/* Input Action bar */}

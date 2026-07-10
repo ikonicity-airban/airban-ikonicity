@@ -1,5 +1,14 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { 
+  getAuth, 
+  initializeAuth,
+  browserLocalPersistence,
+  browserSessionPersistence,
+  inMemoryPersistence,
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  signOut 
+} from 'firebase/auth';
 import { 
   initializeFirestore, 
   collection, 
@@ -52,7 +61,26 @@ try {
 }
 
 export const db = initialDbInstance;
-export const auth = getAuth();
+
+// Initialize Auth with robust local persistence fallbacks to prevent sandboxed iframe storage blocks
+let initialAuthInstance;
+try {
+  initialAuthInstance = initializeAuth(app, {
+    persistence: [browserLocalPersistence, browserSessionPersistence, inMemoryPersistence]
+  });
+} catch (authInitError) {
+  console.warn('[Firebase-SafeNet] Browser local/session persistence blocked in this sandboxed iframe. Falling back to inMemoryPersistence:', authInitError);
+  try {
+    initialAuthInstance = initializeAuth(app, {
+      persistence: inMemoryPersistence
+    });
+  } catch (fallbackAuthError) {
+    console.error('[Firebase-SafeNet] Crucial Auth initialization failure, falling back to default getAuth:', fallbackAuthError);
+    initialAuthInstance = getAuth(app);
+  }
+}
+
+export const auth = initialAuthInstance;
 export const googleProvider = new GoogleAuthProvider();
 
 // Graceful safety net for Firebase iframe/ad-blocker network restrictions
@@ -74,6 +102,7 @@ if (typeof window !== 'undefined') {
       combinedMsg.includes('Could not reach Cloud Firestore backend') ||
       combinedMsg.includes('Backend didn\'t respond within 10 seconds') ||
       combinedMsg.includes('the client is offline') ||
+      combinedMsg.toLowerCase().includes('network-request-failed') ||
       combinedMsg.includes('auth/network-request-failed')
     ) {
       originalWarn.apply(console, ['[Firebase-SafeNet/OfflineMode] App is operating robustly on high-performance Client Local Cache sync.']);
@@ -95,6 +124,7 @@ if (typeof window !== 'undefined') {
       combinedMsg.includes('Could not reach Cloud Firestore backend') ||
       combinedMsg.includes('Backend didn\'t respond within 10 seconds') ||
       combinedMsg.includes('the client is offline') ||
+      combinedMsg.toLowerCase().includes('network-request-failed') ||
       combinedMsg.includes('auth/network-request-failed')
     ) {
       originalWarn.apply(console, ['[Firebase-SafeNet/OfflineMode] App connection deferred. Operating flawlessly in client-side cached mode.']);
@@ -105,29 +135,31 @@ if (typeof window !== 'undefined') {
 
   window.addEventListener('unhandledrejection', (event) => {
     const reason = event.reason;
-    if (reason && (
-      (reason.message && reason.message.includes('auth/network-request-failed')) ||
-      (reason.code && reason.code.includes('auth/network-request-failed')) ||
-      String(reason).includes('auth/network-request-failed') ||
-      String(reason).includes('Could not reach Cloud Firestore backend')
+    const msg = reason ? (reason.message || reason.code || String(reason)) : '';
+    if (msg && (
+      msg.toLowerCase().includes('network-request-failed') ||
+      msg.includes('auth/network-request-failed') ||
+      msg.includes('Could not reach Cloud Firestore backend')
     )) {
       console.warn('[Firebase-SafeNet] Gracefully absorbed iframe-blocked Firebase Auth network request rejection.');
       event.preventDefault();
+      event.stopPropagation();
     }
-  });
+  }, true);
 
   window.addEventListener('error', (event) => {
     const error = event.error;
-    const msg = event.message;
-    if (
-      (error && error.message && error.message.includes('auth/network-request-failed')) ||
-      (msg && msg.includes('auth/network-request-failed')) ||
-      (msg && msg.includes('Could not reach Cloud Firestore backend'))
-    ) {
+    const msg = event.message || (error && error.message) || String(error);
+    if (msg && (
+      msg.toLowerCase().includes('network-request-failed') ||
+      msg.includes('auth/network-request-failed') ||
+      msg.includes('Could not reach Cloud Firestore backend')
+    )) {
       console.warn('[Firebase-SafeNet] Gracefully absorbed iframe-blocked Firebase Auth network error.');
       event.preventDefault();
+      event.stopPropagation();
     }
-  });
+  }, true);
 }
 
 export enum OperationType {

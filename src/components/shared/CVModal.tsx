@@ -517,7 +517,7 @@ export default function CVModal({ isOpen, onClose, accentColor }: CVModalProps) 
                     <div className="text-[10.5px] sm:text-[11.5px] text-slate-600 flex flex-wrap gap-x-3 gap-y-1 mt-1 font-sans">
                       <a href="https://github.com/ikonicity-airban" target="_blank" rel="noreferrer" className="hover:underline text-slate-700">github.com/ikonicity-airban</a>
                       <span className="text-slate-300">|</span>
-                      <a href="https://linkedin.com/in/eban-godwin-ikoni" target="_blank" rel="noreferrer" className="hover:underline text-slate-700">linkedin.com/in/eban-godwin-ikoni</a>
+                      <a href="https://www.linkedin.com/in/airban-ikonicity" target="_blank" rel="noreferrer" className="hover:underline text-slate-700">linkedin.com/in/airban-ikonicity</a>
                       <span className="text-slate-300">|</span>
                       <a href="https://airban-ikonicity.vercel.app" target="_blank" rel="noreferrer" className="hover:underline text-slate-700">airban-ikonicity.vercel.app</a>
                     </div>

@@ -643,6 +643,20 @@ export default function App() {
 
   return (
     <div className={`relative min-h-screen bg-[#050816] text-[#F0F4FF] overflow-x-clip font-sans ${getAccentSelectionClass(accentColor)}`}>
+      {/* Accessibility Skip Link */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[99999] focus:px-4 focus:py-2.5 focus:rounded-lg focus:font-mono focus:text-[11px] focus:font-bold focus:uppercase focus:tracking-wider focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all shadow-[0_0_15px_rgba(0,229,255,0.4)]"
+        style={{
+          backgroundColor: getAccentHex(accentColor),
+          color: '#050816',
+          borderColor: getAccentHex(accentColor),
+          outline: 'none',
+        }}
+      >
+        &gt;_ Skip to Main Content [Enter]
+      </a>
+
       {/* 1. SCALING SYSTEM SCANLINE SWEEP */}
       <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden select-none">
         <div 
@@ -785,12 +799,13 @@ export default function App() {
       </AnimatePresence>
 
       {/* 1. PRIMARY SIDEBAR: Custom Left-Side Navigation Avionics (Desktop) */}
-      <div
+      <aside
         className="fixed left-6 top-1/2 -translate-y-1/2 z-50 hidden lg:flex flex-col items-center py-7 px-3 rounded-full border bg-[#080D1F]/85 backdrop-blur-[20px] transition-all shadow-[0_12px_32px_rgba(5,8,22,0.9)]"
         style={{
           borderColor: getAccentRgba(accentColor, 0.15),
           borderWidth: "1px",
         }}
+        aria-label="Deck Sidebar Navigation"
       >
         {/* Top sidebar element: Miniature Brand Logo Link */}
         <div
@@ -875,7 +890,7 @@ export default function App() {
             <Download className="w-3.5 h-3.5" />
           </motion.button>
         </div>
-      </div>
+      </aside>
 
       {/* 2. UNIFIED CORNER DECK: Consolidated Global Avionics (MetaMask + Customizer + Ambient Sound) */}
       <div
@@ -992,84 +1007,86 @@ export default function App() {
       />
 
       {/* MODULAR SECTIONS 1 to 4 (AND 5 & 8 SYSTEMS) */}
-      <HeroSection
-        accentColor={accentColor}
-        videoUrl={videoUrl}
-        heroBgVideoUrl={heroBgVideoUrl}
-        availabilityStatus={availability.status}
-        isMuted={isMuted}
-        onDownloadCVClick={() => setShowCVModal(true)}
-        isBooting={booting}
-      />
+      <main id="main-content">
+        <HeroSection
+          accentColor={accentColor}
+          videoUrl={videoUrl}
+          heroBgVideoUrl={heroBgVideoUrl}
+          availabilityStatus={availability.status}
+          isMuted={isMuted}
+          onDownloadCVClick={() => setShowCVModal(true)}
+          isBooting={booting}
+        />
 
-      <CompanyMarquee accentColor={accentColor} />
+        <CompanyMarquee accentColor={accentColor} />
 
-      <SectionDivider
-        label="NARRATIVE DECK"
-        sourceSector="SEC_000"
-        targetSector="SEC_001"
-        accentColor={accentColor}
-      />
-      <AboutSection accentColor={accentColor} />
+        <SectionDivider
+          label="NARRATIVE DECK"
+          sourceSector="SEC_000"
+          targetSector="SEC_001"
+          accentColor={accentColor}
+        />
+        <AboutSection accentColor={accentColor} />
 
-      <SectionDivider
-        label="SKILLS BLUEPRINT"
-        sourceSector="SEC_001"
-        targetSector="SEC_003"
-        accentColor={accentColor}
-      />
-      <SkillsSection accentColor={accentColor} />
+        <SectionDivider
+          label="SKILLS BLUEPRINT"
+          sourceSector="SEC_001"
+          targetSector="SEC_003"
+          accentColor={accentColor}
+        />
+        <SkillsSection accentColor={accentColor} />
 
-      <SectionDivider
-        label="PROJECTS BENTO"
-        sourceSector="SEC_003"
-        targetSector="SEC_004"
-        accentColor={accentColor}
-      />
-      <ProjectsSection accentColor={accentColor} dbProjects={dbProjects} />
+        <SectionDivider
+          label="PROJECTS BENTO"
+          sourceSector="SEC_003"
+          targetSector="SEC_004"
+          accentColor={accentColor}
+        />
+        <ProjectsSection accentColor={accentColor} dbProjects={dbProjects} />
 
-      <SectionDivider
-        label="CHRONICLES INDEX"
-        sourceSector="SEC_004"
-        targetSector="SEC_002"
-        accentColor={accentColor}
-      />
-      <WorkExperienceSection accentColor={accentColor} />
+        <SectionDivider
+          label="CHRONICLES INDEX"
+          sourceSector="SEC_004"
+          targetSector="SEC_002"
+          accentColor={accentColor}
+        />
+        <WorkExperienceSection accentColor={accentColor} />
 
-      <SectionDivider
-        label="SERVICES GRAPH"
-        sourceSector="SEC_002"
-        targetSector="SEC_005"
-        accentColor={accentColor}
-      />
-      <ServicesSection accentColor={accentColor} />
+        <SectionDivider
+          label="SERVICES GRAPH"
+          sourceSector="SEC_002"
+          targetSector="SEC_005"
+          accentColor={accentColor}
+        />
+        <ServicesSection accentColor={accentColor} />
 
-      <SectionDivider
-        label="SYSTEM CREDENTIALS"
-        sourceSector="SEC_005"
-        targetSector="SEC_006"
-        accentColor={accentColor}
-      />
-      <CertificationsSection accentColor={accentColor} />
+        <SectionDivider
+          label="SYSTEM CREDENTIALS"
+          sourceSector="SEC_005"
+          targetSector="SEC_006"
+          accentColor={accentColor}
+        />
+        <CertificationsSection accentColor={accentColor} />
 
-      <SectionDivider
-        label="FEEDBACK RECORDS"
-        sourceSector="SEC_006"
-        targetSector="SEC_007"
-        accentColor={accentColor}
-      />
-      <TestimonialsSection
-        accentColor={accentColor}
-        dbTestimonials={dbTestimonials}
-      />
+        <SectionDivider
+          label="FEEDBACK RECORDS"
+          sourceSector="SEC_006"
+          targetSector="SEC_007"
+          accentColor={accentColor}
+        />
+        <TestimonialsSection
+          accentColor={accentColor}
+          dbTestimonials={dbTestimonials}
+        />
 
-      <SectionDivider
-        label="CONTACT COCKPIT"
-        sourceSector="SEC_007"
-        targetSector="SEC_008"
-        accentColor={accentColor}
-      />
-      <ContactSection accentColor={accentColor} />
+        <SectionDivider
+          label="CONTACT COCKPIT"
+          sourceSector="SEC_007"
+          targetSector="SEC_008"
+          accentColor={accentColor}
+        />
+        <ContactSection accentColor={accentColor} />
+      </main>
 
       {/* DYNAMIC SYSTEM CONFIG / AVIONICS OVERLAY DRAWER */}
       <AnimatePresence>
