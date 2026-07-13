@@ -43,7 +43,7 @@ export default function Logo({ size = 48, showText = true, glow = true, accentCo
           <path d="M15,50 L85,50 M50,15 L50,85" stroke={`${themeHex}18`} strokeWidth="1" strokeDasharray="3 4" />
           <circle cx="50" cy="50" r="38" stroke={`${themeHex}22`} strokeWidth="1" strokeDasharray="2 3" />
           
-          {/* Main Stylized Hand-Drawn "A" / "I" Cyberpunk Doodle */}
+          {/* Main Stylized "A" / "I" Cyberpunk Emblem */}
           {/* The Outer Left Leg */}
           <path 
             d="M 28 80 L 50 22" 
@@ -73,7 +73,7 @@ export default function Logo({ size = 48, showText = true, glow = true, accentCo
           <path d="M 37 56 L 63 56" strokeWidth="3" />
           <circle cx="50" cy="56" r="3.5" fill="#050816" stroke={themeHex} strokeWidth="2" />
           
-          {/* Stylized geometric vector sparks/doodle trails on flanking sides */}
+          {/* Stylized geometric vector sparks/emblem trails on flanking sides */}
           <path d="M 15 35 L 25 40" strokeWidth="1.5" stroke={`${themeHex}88`} />
           <path d="M 85 35 L 75 40" strokeWidth="1.5" stroke={`${themeHex}88`} />
           <path d="M 20 62 L 12 65" strokeWidth="1.5" stroke={`${themeHex}88`} />
@@ -89,7 +89,7 @@ export default function Logo({ size = 48, showText = true, glow = true, accentCo
             style={{ color: themeHex }}
           >
             <span className="w-5 h-[1px]" style={{ backgroundColor: `${themeHex}66` }} />
-            <span>AIRBAN DOODLE</span>
+            <span>AIRBAN IKONICITY</span>
             <span className="w-5 h-[1px]" style={{ backgroundColor: `${themeHex}66` }} />
           </div>
         </div>
