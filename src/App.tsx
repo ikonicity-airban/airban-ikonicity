@@ -1443,7 +1443,11 @@ export default function App() {
               href="https://wa.me/2348169862852?text=Hello%20Eban!%20I%20saw%20your%20portfolio..."
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center w-12 h-12 bg-[#25D366] hover:bg-[#20ba56] text-white rounded-full shadow-[0_4px_20px_rgba(37,211,102,0.45)] transition-all duration-300 transform hover:scale-110 cursor-pointer"
+              className="flex items-center justify-center w-12 h-12 text-white rounded-full transition-all duration-300 transform hover:scale-110 hover:brightness-110 cursor-pointer"
+              style={{
+                backgroundColor: getAccentHex(accentColor),
+                boxShadow: `0 4px 20px ${getAccentRgba(accentColor, 0.45)}`,
+              }}
               title="Chat on WhatsApp"
             >
               <svg

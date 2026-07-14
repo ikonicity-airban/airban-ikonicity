@@ -205,10 +205,11 @@ export default function WorkExperienceSection({ accentColor }: WorkExperienceSec
             <motion.div 
               style={{ 
                 top: beamY,
-                boxShadow: `0 0 15px ${glowHex}, 0 0 5px ${glowHex}`,
-                background: `linear-gradient(to bottom, transparent, ${glowHex}, transparent)`
+                boxShadow: `0 0 20px ${glowHex}, 0 0 8px ${glowHex}`,
+                background: `linear-gradient(to bottom, #050816 0%, ${glowHex} 100%)`,
+                height: '40vh'
               }}
-              className="absolute left-1/2 -translate-x-1/2 w-[3px] h-[120px] sm:h-[180px] rounded-full -translate-y-1/2 opacity-90" 
+              className="absolute left-1/2 -translate-x-1/2 w-[3.5px] rounded-b-full -translate-y-1/2 opacity-95 pointer-events-none" 
             />
           </div>
 

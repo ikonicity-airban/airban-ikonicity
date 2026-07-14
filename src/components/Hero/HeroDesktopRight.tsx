@@ -36,9 +36,9 @@ export default function HeroDesktopRight({
       style={{ opacity: colOpacity }}
     >
       <motion.div 
-        initial={{ opacity: 0, x: 20 }}
+        initial={{ opacity: 0, x: 80 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.75, delay: 1.15, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ type: "spring", stiffness: 100, damping: 20, mass: 1, delay: 0.35 }}
         className="space-y-4"
       >
         <h2 
@@ -55,9 +55,9 @@ export default function HeroDesktopRight({
 
       <div className="space-y-6">
         <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 1.35 }}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 100, damping: 20, mass: 1, delay: 0.45 }}
           className="flex items-center gap-4.5"
         >
           <motion.button 

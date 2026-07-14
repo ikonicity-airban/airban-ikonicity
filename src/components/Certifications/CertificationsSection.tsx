@@ -1,4 +1,6 @@
-import { motion } from 'motion/react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { X, Award, ShieldCheck, Check } from 'lucide-react';
 import { getAccentHex, getAccentTextClass, getAccentBgClass, getViaColorClass, getAccentRgba } from '../../utils';
 
 interface CertItem {
@@ -105,8 +107,13 @@ interface CertificationsSectionProps {
 }
 
 export default function CertificationsSection({ accentColor }: CertificationsSectionProps) {
+  const [selectedCert, setSelectedCert] = useState<CertItem | null>(null);
   const textAccentClass = getAccentTextClass(accentColor);
   const accentHex = getAccentHex(accentColor);
+
+  const handleCertClick = (cert: CertItem) => {
+    setSelectedCert(cert);
+  };
 
   const getBorderColorWithOpacity20 = (color: typeof accentColor) => {
     switch (color) {
@@ -203,7 +210,8 @@ export default function CertificationsSection({ accentColor }: CertificationsSec
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: "-50px" }}
                     transition={{ duration: 0.4, delay: certIdx * 0.05 }}
-                    className="group relative flex items-start gap-4 p-5 rounded-lg bg-[#080D1F] border-l-2 transition-all duration-200 hover:bg-[#0D1530] hover:shadow-[0_0_0_1px_rgba(255,255,255,0.05)]"
+                    onClick={() => handleCertClick(cert)}
+                    className="group relative flex items-start gap-4 p-5 rounded-lg bg-[#080D1F] border-l-2 transition-all duration-200 hover:bg-[#0D1530] hover:shadow-[0_0_0_1px_rgba(255,255,255,0.05)] cursor-pointer"
                     style={{ borderLeftColor: accentHex }}
                   >
                     {/* Icon container */}
@@ -280,6 +288,116 @@ export default function CertificationsSection({ accentColor }: CertificationsSec
         </motion.div>
 
       </div>
+
+      {/* Dynamic Cyber Certificate Viewer Modal */}
+      <AnimatePresence>
+        {selectedCert && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              className="absolute inset-0 bg-slate-950/85 backdrop-blur-md"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedCert(null)}
+            />
+
+            {/* Certificate Container */}
+            <motion.div
+              className="relative w-full max-w-lg bg-[#070b1a] border border-white/10 rounded-2xl p-6 sm:p-8 overflow-hidden text-left shadow-[0_0_40px_rgba(0,0,0,0.6)] flex flex-col"
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 240 }}
+              style={{
+                boxShadow: `0 0 35px ${accentHex}15, inset 0 1px 1px rgba(255,255,255,0.05)`
+              }}
+            >
+              {/* Holographic Glowing Scan line animation */}
+              <div 
+                className="absolute left-0 right-0 h-[2px] opacity-10 animate-[bounce_3s_infinite]"
+                style={{ backgroundImage: `linear-gradient(to right, transparent, ${accentHex}, transparent)` }}
+              />
+
+              {/* Close Button */}
+              <button
+                onClick={() => setSelectedCert(null)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center hover:text-red-400 transition-colors cursor-pointer text-slate-300 z-30"
+                aria-label="Close cert viewer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {/* Header Label */}
+              <div className="flex items-center gap-2 mb-6 border-b border-white/5 pb-3">
+                <ShieldCheck className="w-5 h-5" style={{ color: accentHex }} />
+                <span className="text-[9px] font-mono font-extrabold uppercase tracking-widest text-slate-400">// CREDENTIAL_VERIFIED_SECURE</span>
+              </div>
+
+              {/* Certificate badge display */}
+              <div className="flex flex-col items-center justify-center py-6 border border-white/5 bg-[#0a1026]/40 rounded-xl mb-6 relative">
+                <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center border border-white/10 mb-4 shadow-inner">
+                  <Award className="w-8 h-8" style={{ color: accentHex }} />
+                </div>
+                
+                <h3 className="text-sm font-mono text-slate-400 uppercase tracking-widest text-center font-black">
+                  Systems License Certification
+                </h3>
+                
+                {/* Visual badge numbers */}
+                <span className="text-[8px] font-mono text-slate-600 tracking-wider mt-1">ID // CERT_E_074900</span>
+              </div>
+
+              {/* Certificate Title */}
+              <div className="space-y-2 mb-6">
+                <span className="block text-[8px] font-mono text-slate-500 uppercase tracking-widest font-extrabold">CREDENTIAL NAME</span>
+                <h4 className="text-lg font-display font-black text-white leading-tight uppercase tracking-wider">
+                  {selectedCert.name}
+                </h4>
+              </div>
+
+              {/* Metadata details */}
+              <div className="grid grid-cols-2 gap-4 border-t border-b border-white/5 py-4 mb-6 text-xs font-mono">
+                <div>
+                  <span className="block text-[8px] text-slate-500 uppercase font-extrabold tracking-widest mb-1">ISSUED BY</span>
+                  <span className="text-white font-bold">{selectedCert.issuer.toUpperCase()}</span>
+                </div>
+                <div>
+                  <span className="block text-[8px] text-slate-500 uppercase font-extrabold tracking-widest mb-1">LICENSE STATUS</span>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-emerald-400 font-extrabold text-[10px]">VERIFIED_ACTIVE</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Telemetry/Audit details */}
+              <div className="p-3.5 rounded-lg bg-white/[0.01] border border-white/5 font-mono text-[9px] text-[#8A9BC4] space-y-1.5 leading-relaxed">
+                <div>
+                  <span className="text-slate-500">// CRYPTOGRAPHIC_HASH:</span>
+                  <p className="text-[10px] text-white font-bold select-all truncate">
+                    SHA256: 4b663f7415a4489fbca9efe7cf2e25d3a58d60c499f57c
+                  </p>
+                </div>
+                <div>
+                  <span className="text-slate-500">// DEPLOY_NODE:</span>
+                  <p className="text-white font-bold">NS_NIGERIA_SYSTEMS_0X8890</p>
+                </div>
+              </div>
+
+              {/* Action */}
+              <button 
+                onClick={() => setSelectedCert(null)}
+                className="mt-6 w-full py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-mono text-[10px] font-bold uppercase border border-white/10 tracking-widest transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Check className="w-4 h-4" />
+                <span>Dismiss Verification Badge</span>
+              </button>
+
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

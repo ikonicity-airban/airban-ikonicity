@@ -153,9 +153,9 @@ function HeroSection({ accentColor, videoUrl, availabilityStatus, onDownloadCVCl
 
       <div className="hidden md:block w-full max-w-7xl mx-auto px-6 relative min-h-screen z-10 pointer-events-none">
         <motion.div
-          initial={{ opacity: 0, y: 55 }}
+          initial={{ opacity: 0, y: 120 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 170, damping: 24, mass: 0.95, delay: 0.75 }}
+          transition={{ type: "spring", stiffness: 120, damping: 22, mass: 0.95, delay: 0.15 }}
           className="hero-avatar pointer-events-auto"
           style={{
             transform: `translateX(-50%) translateY(${charParallaxY}px)`,

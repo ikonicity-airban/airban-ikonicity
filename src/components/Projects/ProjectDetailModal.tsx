@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ExternalLink, Cpu, Briefcase, CheckCircle2, ChevronRight, Globe, Layers } from 'lucide-react';
 import { Project } from '../../types';
-import { getAccentTextClass, getAccentBgClass, getAccentBorderClass } from '../../utils';
+import { getAccentTextClass, getAccentBgClass, getAccentBorderClass, getAccentHex } from '../../utils';
 
 interface ProjectDetailModalProps {
   isOpen: boolean;
@@ -84,9 +84,14 @@ const getProjectMetadata = (id: string, tag: string) => {
 };
 
 export default function ProjectDetailModal({ isOpen, onClose, project, accentColor }: ProjectDetailModalProps) {
+  const [showLivePreview, setShowLivePreview] = useState(false);
   const textAccent = getAccentTextClass(accentColor);
   const bgAccent = getAccentBgClass(accentColor);
   const borderAccent = getAccentBorderClass(accentColor);
+
+  useEffect(() => {
+    setShowLivePreview(false);
+  }, [project]);
 
   const getGlowShadow = (color: typeof accentColor) => {
     switch (color) {
@@ -161,16 +166,59 @@ export default function ProjectDetailModal({ isOpen, onClose, project, accentCol
             {/* Scrollable Body Content */}
             <div className="p-6 md:p-8 space-y-6 flex-1 overflow-y-auto">
               
-              {/* Project Image Banner */}
+              {/* Project Image Banner / Sandboxed iFrame Preview */}
               {project.image && (
-                <div className="relative aspect-video rounded-xl overflow-hidden border border-white/10 bg-slate-950 group">
-                  <img
-                    src={project.image}
-                    alt={`${project.title} screenshot`}
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
+                <div className="relative aspect-video rounded-xl overflow-hidden border border-white/10 bg-slate-950 group flex flex-col">
+                  {showLivePreview && project.links && project.links[0]?.url ? (
+                    <div className="relative w-full h-full flex-1 min-h-[220px] sm:min-h-[280px]">
+                      {/* Loading Spinner Backdrop */}
+                      <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center gap-3 z-0 pointer-events-none">
+                        <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: getAccentHex(accentColor) }} />
+                        <span className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">Mounting Live Sandbox...</span>
+                      </div>
+                      
+                      <iframe
+                        src={project.links[0].url}
+                        title={`${project.title} live sandbox landing page preview`}
+                        className="w-full h-full border-0 relative z-10 bg-transparent"
+                        referrerPolicy="no-referrer"
+                        sandbox="allow-scripts allow-same-origin allow-popups"
+                      />
+                      
+                      {/* Floating reset back to image trigger */}
+                      <button
+                        onClick={() => setShowLivePreview(false)}
+                        className="absolute bottom-3 right-3 z-20 px-3 py-1.5 bg-[#070b19]/90 backdrop-blur-md hover:bg-slate-950 text-white rounded-lg border border-white/15 font-mono text-[8.5px] font-bold uppercase transition-all tracking-wider cursor-pointer"
+                      >
+                        Reset to Blueprint (Image)
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative w-full h-full">
+                      <img
+                        src={project.image}
+                        alt={`${project.title} screenshot`}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.01]"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/10 to-transparent pointer-events-none" />
+                      
+                      {/* Mount Interactive iFrame trigger */}
+                      {project.links && project.links[0]?.url && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <button
+                            onClick={() => setShowLivePreview(true)}
+                            className="px-5 py-2.5 bg-slate-950/90 backdrop-blur-md text-white rounded-xl border border-white/20 font-mono text-[9.5px] font-bold uppercase tracking-wider transition-all duration-300 hover:scale-105 shadow-2xl flex items-center gap-2 cursor-pointer"
+                            style={{ borderColor: getAccentHex(accentColor) }}
+                          >
+                            <Globe className="w-3.5 h-3.5 animate-pulse" style={{ color: getAccentHex(accentColor) }} />
+                            <span>Mount Interactive Live Site</span>
+                          </button>
+                          <span className="text-[8px] font-mono text-slate-400 mt-2 tracking-widest uppercase">Loads page in secure sandboxed container</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 

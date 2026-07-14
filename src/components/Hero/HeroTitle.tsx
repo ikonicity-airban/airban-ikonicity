@@ -19,9 +19,9 @@ export default function HeroTitle({ scrollY, isMobile, primaryColorHex, accentCo
       }}
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 0.90, scale: 1 }}
-        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+        initial={{ opacity: 0, scale: 0.92, y: -60 }}
+        animate={{ opacity: 0.90, scale: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 90, damping: 18, mass: 1, delay: 0.1 }}
         className="text-center font-extrabold uppercase select-none tracking-tighter"
         style={{
           fontFamily: "'Syne', sans-serif"

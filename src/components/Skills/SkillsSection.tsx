@@ -3,6 +3,31 @@ import { portfolioData } from '../../data';
 import { getAccentTextClass } from '../../utils';
 import SkillGroupCard from './SkillGroupCard';
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.05,
+    }
+  }
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 35, scale: 0.95 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    scale: 1,
+    transition: {
+      type: "spring" as const,
+      stiffness: 90,
+      damping: 15,
+    }
+  }
+};
+
 interface SkillsSectionProps {
   accentColor: 'green' | 'cyan' | 'pink' | 'purple' | 'yellow';
 }
@@ -47,13 +72,13 @@ export default function SkillsSection({ accentColor }: SkillsSectionProps) {
   const hoverBorderAccentClass = getHoverBorderAccentClass(accentColor);
 
   return (
-    <section id="skills" className="py-24 border-t border-white/5 bg-[#080D1F]/30 relative z-20">
+    <section id="skills" className="py-24 border-t border-white/5 bg-[#080D1F]/30 relative z-20 overflow-hidden">
       <motion.div 
         className="max-w-7xl mx-auto px-6"
-        initial={{ opacity: 0, y: 35 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-120px" }}
-        transition={{ duration: 0.7, ease: "easeOut" }}
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: false, amount: 0.2 }}
       >
         
         {/* Header Block */}
@@ -74,16 +99,20 @@ export default function SkillsSection({ accentColor }: SkillsSectionProps) {
         {/* Grouped, flat lists without proficiency progress bars */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {portfolioData.skillsGrouped.map((group, idx) => (
-            <SkillGroupCard 
-              key={idx}
-              group={group}
-              idx={idx}
-              accentColor={accentColor}
-              glowShadowClass={glowShadowClass}
-              dotAccentClass={dotAccentClass}
-              hoverBorderAccentClass={hoverBorderAccentClass}
-              accentTextClass={accentTextClass}
-            />
+            <motion.div 
+              key={idx} 
+              variants={cardVariants}
+            >
+              <SkillGroupCard 
+                group={group}
+                idx={idx}
+                accentColor={accentColor}
+                glowShadowClass={glowShadowClass}
+                dotAccentClass={dotAccentClass}
+                hoverBorderAccentClass={hoverBorderAccentClass}
+                accentTextClass={accentTextClass}
+              />
+            </motion.div>
           ))}
         </div>
 

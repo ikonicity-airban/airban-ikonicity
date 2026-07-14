@@ -293,7 +293,7 @@ export default function SkillGroupCard({
   return (
     <div 
       onMouseEnter={() => playClickSound('hover')}
-      className={`p-5 rounded-2xl bg-[#050816] border border-white/5 hover:border-white/10 transition-all duration-300 text-left flex flex-col justify-between ${glowShadowClass}`}
+      className={`p-5 rounded-2xl bg-gradient-to-br from-[#0c1432] via-[#050816] to-[#03050d] border border-white/5 hover:border-white/10 transition-all duration-300 text-left flex flex-col justify-between shadow-xl ${glowShadowClass}`}
     >
       <div className="space-y-4">
         {/* Title Line */}

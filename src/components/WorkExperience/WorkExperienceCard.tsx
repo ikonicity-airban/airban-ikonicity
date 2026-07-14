@@ -69,10 +69,10 @@ export default function WorkExperienceCard({
       <div className={`w-full md:w-[45%] pl-9 md:pl-0 ${isEven ? 'md:text-right md:order-1' : 'md:text-left md:order-2'}`}>
         <motion.div 
           className="pt-2"
-          initial={{ opacity: 0, x: isEven ? -20 : 20 }}
+          initial={{ opacity: 0, x: isEven ? -40 : 40 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6 }}
+          transition={{ type: "spring", stiffness: 80, damping: 14, mass: 0.9 }}
         >
           {/* Monospace tag detailing index */}
           <span className="block text-[10px] font-mono text-slate-500 mb-1.5 font-bold">
@@ -119,10 +119,10 @@ export default function WorkExperienceCard({
       <div className={`w-full md:w-[45%] pl-9 md:pl-0 mt-4 md:mt-0 ${isEven ? 'md:order-2' : 'md:order-1'}`}>
         <motion.div 
           className={`p-4 sm:p-6 rounded-2xl bg-[#080D1F] border border-white/5 transition-all duration-300 text-left relative ${accentBorderClass}`}
-          initial={{ opacity: 0, x: isEven ? 20 : -20 }}
+          initial={{ opacity: 0, x: isEven ? 40 : -40 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6 }}
+          transition={{ type: "spring", stiffness: 80, damping: 14, mass: 0.9, delay: 0.1 }}
         >
           {/* Cyber Gradient Header bar inside card */}
           <div className={`absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent ${getViaColorClass(accentColor)} to-transparent opacity-40`} />
